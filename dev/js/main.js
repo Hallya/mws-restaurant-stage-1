@@ -33,12 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(error => console.error(error));
 });
 
-
-/**
- * Open or close the options/filter menu.
- */
-
-
 /**
  * Register to service worker if the browser is compatible.
  */

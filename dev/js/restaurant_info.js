@@ -37,9 +37,7 @@ window.initMap = () => {
       })
       document.getElementById('map-container').appendChild(mapPlaceHolder);
       self.map.addListener('tilesloaded', function () {
-        // if (mapLoader.classList.contains('hidden'){
           mapLoader.classList.toggle('hidden');
-        // }
       });
       DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
       fillBreadcrumb();

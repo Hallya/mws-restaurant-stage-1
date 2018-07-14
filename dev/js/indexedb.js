@@ -53,7 +53,9 @@ const idbKey = {
   },
   addReview(store, review) {
     return openDatabase().then(db => {
-      if (!db) return;
+      if (!db) {
+        return;
+      }
       return db
         .transaction(store, 'readwrite')
         .objectStore(store)

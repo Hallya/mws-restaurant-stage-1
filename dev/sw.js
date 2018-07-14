@@ -131,7 +131,6 @@ async function postLocalReviews() {
             self.registration.showNotification("Review synchronised to server")
               .then(() => idbKey.delete(store, review.restaurant_id))
           }
-
           return response;
         })
         .catch(error => {
