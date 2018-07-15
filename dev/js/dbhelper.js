@@ -77,7 +77,7 @@ const DBHelper = {
    */
   fetchReviews: () => {
     const store = 'reviews';
-    return idbKey.getAll(store)
+    return idbKey.getAll(store).then(reviews => reviews.reverse())
     .then(reviews => {
       if (reviews.length < 10) {
         return DBHelper.DATABASE_URL.GET.allReviews()
