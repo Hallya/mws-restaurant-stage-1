@@ -48,23 +48,23 @@ gulp.task('dist', ['styles', 'copy-html', 'scripts-dist', 'copy-data', 'copy-man
 gulp.task('scripts', (done) => {
   gulp.src(['dev/js/main.js', 'dev/js/restaurant_info.js'])
     .pipe(browserify())
-    .pipe(gulp.dest('dist/js'));
+    .pipe(gulp.dest('./dist/js'));
   gulp.src('dev/sw.js')
     .pipe(browserify())
-    .pipe(gulp.dest('dist'));
+    .pipe(gulp.dest('./dist'));
   connect.reload();
     done();
   });
   
 gulp.task('scripts-dist', (done) => {
-  gulp.src(['dev/js/main.js', 'dev/js/restaurant_info.js'])  
+  gulp.src(['./dev/js/main.js', './dev/js/restaurant_info.js'])  
     .pipe(browserify())
     .pipe(uglify())
-    .pipe(gulp.dest('dist/js'));
-  gulp.src('dev/sw.js')
+    .pipe(gulp.dest('./dist/js'));
+  gulp.src('./dev/sw.js')
     .pipe(browserify())
     .pipe(uglify())
-    .pipe(gulp.dest('dist'));
+    .pipe(gulp.dest('./dist'));
   connect.reload();
   done();
 });
@@ -135,9 +135,6 @@ gulp.task('copy-images', () => {
       progressive: true,
       withMetadata: false,
     }))
-    // .pipe(imagemin({
-    //   progressive: true
-    // }))
     .pipe(gulp.dest('dist/assets/img/jpg'));
   gulp.src('dev/assets/img/png/*')
     .pipe(imagemin({
