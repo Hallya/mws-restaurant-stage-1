@@ -4,7 +4,7 @@ const window = (typeof self === 'object' && self.self === self && self) ||
 const idbKey = require('./js/indexedb');
 const DBHelper = require('./js/dbhelper');
 
-const version = 6;
+const version = 1;
 const CURRENT_CACHES = {
   CACHE_STATIC: 'static-cache-' + version,
   CACHE_MAP: 'map-api-' + version,
@@ -142,7 +142,7 @@ async function postLocalReviews() {
 }
 
 const fetchLastReviews = async () => {
-  const response = await DBHelper.DATABASE_URL.GET.allReviews();
+  const response = await DBHelper.DATABASE_URL.GET.restaurantReviews(location.search.match(/\d+/)[0]);
   const reviews = await response.json(),
     store = 'reviews';
   reviews.forEach(review => idbKey.set(store, review))

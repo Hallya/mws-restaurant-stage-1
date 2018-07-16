@@ -171,7 +171,10 @@ const updateRestaurants = async () => {
   neighborhood = nSelect[nIndex].value;
   sort = sSelect[sIndex].value;
   
-  return Promise.all([DBHelper.fetchReviews(), DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood)])
+  return Promise.all([
+    DBHelper.fetchReviews(),
+    DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood)
+  ])
     .then(results => {
       self.reviews = results[0];
       self.restaurants = results[1];
@@ -248,35 +251,6 @@ const generateRestaurantsHTML = (restaurants = self.restaurants) => {
   const ul = document.getElementById('restaurants-list');
   restaurants.forEach(restaurant => ul.append(createRestaurantHTML(restaurant)));
   return launch.lazyLoading();
-  // if ('IntersectionObserver' in window) {
-    
-  //   const options = {
-  //     root: null,
-  //     threshold: [0],
-  //     rootMargin: "600px"
-  //   }
-
-  //   let lazyRestaurantObserver = new IntersectionObserver(function (entries, observer) {
-      
-  //     entries.forEach(function (entry) {
-        
-  //       if (entry.isIntersecting) {
-          
-  //         lazyRestaurantObserver.unobserve(entry.target);
-          
-  //         const restaurant = pushRestaurants.next();
-  //         if (!restaurant.done) {
-  //           ul.append(restaurant.value);
-  //           lazyRestaurantObserver.observe(restaurant.value);
-  //           launch.lazyLoading()
-  //         }
-  //       }
-  //     });
-  //   }, options);
-
-  //   const pushRestaurants = restaurantGenerator()
-  //   lazyRestaurantObserver.observe(listOfRestaurants)
-  // }
 };
 
 /**

@@ -13,6 +13,7 @@ window.addEventListener('load', () => {
       .then(registration => {
         registration.sync.register('post-review');
         registration.sync.register('fetch-new-reviews');
+        console.log('Registered to SW & "post-review" sync tag & "fetch-new-reviews" tag')
       });
   }
 });
@@ -58,8 +59,9 @@ const fetchRestaurantFromURL = () => {
   if (!id) { // no id found in URL
     return console.error('No restaurant id in URL');
   }
-  return Promise.all([DBHelper.fetchRestaurantById(id), DBHelper.fetchReviews()])
+  return Promise.all([DBHelper.fetchRestaurantById(id), DBHelper.fetchRestaurantReviews(id)])
     .then(results => {
+
       self.reviews = results[1];
       return self.restaurant = results[0];
     })

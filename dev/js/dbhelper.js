@@ -13,7 +13,7 @@ const scheme = 'http://',
   },
 
   baseURI = scheme + host + port;
-
+console.log(baseURI + path.reviews + query.restaurant_id + 2);
 const DBHelper = {
 
   DATABASE_URL:{
@@ -21,6 +21,7 @@ const DBHelper = {
       allRestaurants: () => fetch(baseURI + path.restaurants),
       allReviews: () => fetch(baseURI + path.reviews),
       restaurant: (id) => fetch(baseURI + path.restaurants + id ),
+      restaurantReviews: (id) => fetch(baseURI + path.reviews + query.restaurant_id + id),
       setFavoriteRestaurants: (answer) => fetch(baseURI + path.restaurants + query.is_favorite + answer)
     },
     POST: {
@@ -84,6 +85,29 @@ const DBHelper = {
         .then(response => response.json())
         .then(reviews => {
           console.log('- Reviews data fetched !');
+          return reviews.reviews || reviews;
+        })
+        .catch(error => console.error(`Request failed. Returned status of ${error}`));
+      } else {
+        return reviews;
+      }
+    }).catch(error => {
+      console.error(error)
+    });
+  },
+  
+  /**
+   * Fetch restaurant reviews.
+   */
+  fetchRestaurantReviews: (id) => {
+    const store = 'reviews';
+    return idbKey.getAll(store).then(reviews => reviews.reverse())
+    .then(reviews => {
+      if (reviews.filter(review => review.restaurant_id === id).length < 10) {
+        return DBHelper.DATABASE_URL.GET.restaurantReviews(id)
+        .then(response => response.json())
+        .then(reviews => {
+          console.log('- Restaurant reviews fetched !');
           return reviews.reviews || reviews;
         })
         .then(reviews => {
@@ -203,8 +227,8 @@ const DBHelper = {
       name: form["name"].value,
       rating: Number(form["rating"].value),
       comments: form["comments"].value,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
+      // createdAt: Date.now(),
+      // updatedAt: Date.now()
     }
     await idbKey.set('posts', body);
     await idbKey.addReview('reviews', body);
