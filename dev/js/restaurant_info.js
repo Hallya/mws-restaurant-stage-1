@@ -62,7 +62,7 @@ const fetchRestaurantFromURL = () => {
   return Promise.all([DBHelper.fetchRestaurantById(id), DBHelper.fetchRestaurantReviews(id)])
     .then(results => {
 
-      self.reviews = results[1];
+      self.reviews = results[1].reverse();
       return self.restaurant = results[0];
     })
     .then(fillRestaurantHTML)

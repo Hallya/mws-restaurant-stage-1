@@ -4,7 +4,7 @@ const window = (typeof self === 'object' && self.self === self && self) ||
 const idbKey = require('./js/indexedb');
 const DBHelper = require('./js/dbhelper');
 
-const version = 1;
+const version = 3;
 const CURRENT_CACHES = {
   CACHE_STATIC: 'static-cache-' + version,
   CACHE_MAP: 'map-api-' + version,

@@ -101,7 +101,7 @@ const DBHelper = {
    */
   fetchRestaurantReviews: (id) => {
     const store = 'reviews';
-    return idbKey.getAll(store).then(reviews => reviews.reverse())
+    return idbKey.getAll(store)
     .then(reviews => {
       if (reviews.filter(review => review.restaurant_id === id).length < 10) {
         return DBHelper.DATABASE_URL.GET.restaurantReviews(id)
