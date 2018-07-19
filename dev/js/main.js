@@ -1,16 +1,16 @@
 const DBHelper =  require('./dbhelper');
 const launch = require('./helpers');
-// import launch from './helpers';
-// import DBHelper from './dbhelper';
+const idbKey = require('./indexedb');
 
-let restaurants;
-let neighborhoods;
-let cuisines;
-let loading = false;
-let markers = [];
-let cuisine;
-let neighborhood;
-let sort;
+let restaurants,
+neighborhoods,
+cuisines,
+loading = false,
+markers = [],
+cuisine,
+neighborhood,
+sort,
+favorites;
 
 const 
   filterOptions = document.querySelector('.filter-options'),
@@ -18,6 +18,7 @@ const
   listOfRestaurants = document.querySelector('#restaurants-list'),
   neighborhoodsSelect = document.querySelector('#neighborhoods-select'),
   cuisinesSelect = document.querySelector('#cuisines-select'),
+  favoritesCheckbox = document.querySelector('#favorites input'),
   sortSelect = document.querySelector('#sort-select'),
   loader = document.querySelector('#map-loader');
 
@@ -26,6 +27,12 @@ const
  */
 document.addEventListener('DOMContentLoaded', () => {
 
+  if ('serviceWorker' in navigator) {
+    console.log('Service worker available !')
+    const pathToServiceWorker = window.location.hostname === 'hallya.github.io' ? '/mws-restaurant-stage-1/sw.js' : '../sw.js'
+    navigator.serviceWorker.register(pathToServiceWorker)
+      .then(registration => console.log('Registration to serviceWorker complete with scope :', registration.scope));
+  }
   updateRestaurants()
     .then(addSortOptions)
     .then(addCuisinesOptions)
@@ -38,12 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 window.addEventListener('load', () => {
   
-  if ('serviceWorker' in navigator) {
-    console.log('Service worker available !')
-    const pathToServiceWorker = window.location.hostname === 'hallya.github.io' ? '/mws-restaurant-stage-1/sw.js' : '../sw.js'
-    navigator.serviceWorker.register(pathToServiceWorker)
-      .then(registration => console.log('Registration to serviceWorker complete with scope :', registration.scope));
-  }
 
   if (!window.navigator.standalone
     && window.navigator.userAgent.indexOf('Android') === -1
@@ -55,7 +56,7 @@ window.addEventListener('load', () => {
   cuisinesSelect.addEventListener('change', updateRestaurants);
   neighborhoodsSelect.addEventListener('change', updateRestaurants);
   sortSelect.addEventListener('change', updateRestaurants);
-
+  favoritesCheckbox.addEventListener('change', updateRestaurants);
 });
     
 filterButton.addEventListener('click', launch.toggleMenu);
@@ -136,6 +137,8 @@ window.initMap = () => {
     center: loc,
     zoom: 12,
     streetViewControl: false,
+    zoomControl: true,
+    fullscreenControl: true,
     mapTypeId: 'roadmap',
     mapTypeControl: false,
   });
@@ -155,21 +158,24 @@ const updateRestaurants = async () => {
   const cSelect = cuisinesSelect;
   const nSelect = neighborhoodsSelect;
   const sSelect = sortSelect;
+  const fSelect = favoritesCheckbox;
 
   const cIndex = cSelect.selectedIndex;
   const nIndex = nSelect.selectedIndex;
   const sIndex = sSelect.selectedIndex;
+  const fIndex = favoritesCheckbox.checked;
 
   if (cuisine === cSelect[cIndex].value
     && neighborhood === nSelect[nIndex].value
-    && sort === sSelect[sIndex].value) {
+    && sort === sSelect[sIndex].value
+    && favorites === favoritesCheckbox.checked) {
     
-    console.log('- Restaurants list already update');
     return Promise.resolve();
   }
   cuisine = cSelect[cIndex].value;
   neighborhood = nSelect[nIndex].value;
   sort = sSelect[sIndex].value;
+  favorites = favoritesCheckbox.checked;
   
   return Promise.all([
     DBHelper.fetchReviews(),
@@ -182,6 +188,7 @@ const updateRestaurants = async () => {
     })
     .then(resetRestaurants)
     .then(sortRestaurantsBy)
+    .then(getFavorites)
     .then(generateRestaurantsHTML)
     .then(() => console.log('- Restaurants list updated !'))
     .catch(error => console.error(error))
@@ -218,6 +225,16 @@ const addSortOptions = () => {
   });
 }
 
+const getFavorites = (restaurants = self.restaurants) => {
+  favorites && document.getElementById('favorites').classList.add('active');
+  !favorites && document.getElementById('favorites').classList.remove('active');
+  return restaurants
+    .filter(restaurant => favorites && restaurant.is_favorite === 'true' || !favorites && restaurant
+    );
+}
+/**
+ * Sort restaurants.
+ */
 const sortRestaurantsBy = (restaurants = self.restaurants) => {
   const sIndex = sortSelect.selectedIndex;
   switch (sortSelect[sIndex].value) {
@@ -271,17 +288,21 @@ const createRestaurantHTML = (restaurant) => {
   const image = document.createElement('img');
   const containerNote = document.createElement('aside');
   const note = document.createElement('p');
+  const containerFavorite = document.createElement('button');
+  const notFavorite = document.createElement('img');
+  const favorite = document.createElement('img');
 
   sourceWebp.dataset.srcset = `${DBHelper.imageWebpUrlForRestaurant(restaurant)}-large_x1.webp 1x, ${DBHelper.imageWebpUrlForRestaurant(restaurant)}-large_x2.webp 2x`;
   sourceWebp.srcset = 'assets/img/svg/puff.svg';
   sourceWebp.media = '(min-width: 1000px)';
-  sourceWebp.className = 'lazy';
   sourceWebp.type = 'image/webp';
+  sourceWebp.className = 'lazy';
   source.dataset.srcset = `${DBHelper.imageUrlForRestaurant(restaurant)}-large_x1.jpg 1x, ${DBHelper.imageUrlForRestaurant(restaurant)}-large_x2.jpg 2x`;
   source.srcset = 'assets/img/svg/puff.svg';
   source.media = '(min-width: 1000px)';
   source.className = 'lazy';
   source.type = 'image/jpeg';
+  source.onerror = "this.onerror=null;this.src='assets/img/svg/no-wifi.svg';"
   
   secondSourceWebp.dataset.srcset = `${DBHelper.imageWebpUrlForRestaurant(restaurant)}-medium_x1.webp 1x, ${DBHelper.imageWebpUrlForRestaurant(restaurant)}-medium_x2.webp 2x`;
   secondSourceWebp.srcset = 'assets/img/svg/puff.svg';
@@ -302,7 +323,7 @@ const createRestaurantHTML = (restaurant) => {
   thSource.dataset.srcset = `${DBHelper.imageUrlForRestaurant(restaurant)}-small_x2.jpg 2x, ${DBHelper.imageUrlForRestaurant(restaurant)}-small_x1.jpg 1x`;
   thSource.srcset = 'assets/img/svg/puff.svg';
   thSource.media = '(min-width: 320px)';
-  thSource.className = 'lazy';
+
   thSource.type = 'image/jpeg';
   
   image.dataset.src = `${DBHelper.imageUrlForRestaurant(restaurant)}-small_x1.jpg`;
@@ -312,9 +333,22 @@ const createRestaurantHTML = (restaurant) => {
   image.alt = `${restaurant.name}'s restaurant`;
   image.type = 'image/jpeg';
   
-  note.innerHTML = `${restaurant.average_rating || launch.getAverageNote(restaurant.id)}/5`;
+  note.innerHTML = `${restaurant.average_rating || launch.getAverageNote(restaurant.id)}`;
   containerNote.append(note);
   containerNote.id = 'container-note';
+
+  containerFavorite.className = 'container--favorite';
+  containerFavorite.id = restaurant.id;
+  containerFavorite.addEventListener('click',
+    () => DBHelper.setFavorite(notFavorite, restaurant));
+  notFavorite.src = 'assets/img/svg/not-favorite.svg';
+  notFavorite.id = 'not-favorite';
+  notFavorite.className = restaurant.is_favorite === 'true' && 'hidden';
+  favorite.src = 'assets/img/svg/favorite.svg';
+  favorite.id = 'favorite';
+
+  containerFavorite.append(favorite);
+  containerFavorite.append(notFavorite);
 
   picture.append(sourceWebp);
   picture.append(source);
@@ -333,6 +367,7 @@ const createRestaurantHTML = (restaurant) => {
   more.setAttribute('rel', 'noopener');
 
   figure.append(picture);
+  figure.append(containerFavorite);
   figcaption.append(more);
   figure.append(figcaption);
   

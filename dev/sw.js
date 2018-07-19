@@ -4,11 +4,12 @@ const window = (typeof self === 'object' && self.self === self && self) ||
 const idbKey = require('./js/indexedb');
 const DBHelper = require('./js/dbhelper');
 
-const version = 3;
+const requestFetched = [];
+const version = 1;
 const CURRENT_CACHES = {
   CACHE_STATIC: 'static-cache-' + version,
   CACHE_MAP: 'map-api-' + version,
-  CACHE_FONT: 'google-fonts-3'
+  CACHE_FONT: 'google-fonts-' + version
 }
 
 const URLS_TO_CACHE = [
@@ -18,6 +19,9 @@ const URLS_TO_CACHE = [
   'assets/css/fonts/iconicfill.woff2',
   'assets/css/fonts/fontawesome.woff2',
   'assets/img/svg/puff.svg',
+  'assets/img/svg/no-wifi.svg',
+  'assets/img/svg/not-favorite.svg',
+  'assets/img/svg/favorite.svg',
   'assets/img/png/launchScreen-ipad-9.7.png',
   'assets/img/png/launchScreen-ipadpro-10.5.png',
   'assets/img/png/launchScreen-ipadpro-12.9.png',
@@ -44,7 +48,7 @@ self.addEventListener('install', event => {
       .then(cache => cache.addAll(URLS_TO_CACHE))
       .then(() => {
         console.log('SW - All resources cached.');
-        self.skipWaiting();
+        self.skipWaiting(),
         console.log('SW - SW version skipped.');
       })
       .catch(error => console.error('SW - Open cache failed :', error))
@@ -65,7 +69,9 @@ self.addEventListener('activate', event => {
           }
         })
       ))
-      .then(() => console.log(`SW - "${CURRENT_CACHES.CACHE_STATIC}" now ready to handle fetches!`))
+      .then(() => {
+        console.log(`SW - "${CURRENT_CACHES.CACHE_STATIC}" now ready to handle fetches!`);
+      })
   );
 
 });
@@ -73,7 +79,6 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   const location = window.location;
-
   switch (url.hostname) {
     case 'maps.gstatic.com':
       event.respondWith(getFromCacheOrFetch(CURRENT_CACHES.CACHE_MAP, event.request));
@@ -89,14 +94,14 @@ self.addEventListener('fetch', event => {
         event.respondWith(getFromCacheOrFetch(CURRENT_CACHES.CACHE_STATIC, newPath));
       }
 
-      else if (url.pathname.endsWith('restaurants.json')) {
+      else if (url.pathname.startsWith('/restaurants') || url.pathname.startsWith('/reviews')) {
         event.respondWith(fetch(event.request));
       }
-      
+      else if (event.request.method !== 'GET') {
+        event.respondWith(fetch(event.request))
+      }
       else {
-        event.request.method !== 'POST'
-          ? event.respondWith(getFromCacheOrFetch(CURRENT_CACHES.CACHE_STATIC, event.request))
-          : event.respondWith(fetch(event.request));
+        event.respondWith(getFromCacheOrFetch(CURRENT_CACHES.CACHE_STATIC, event.request))
       }
     break;
 
@@ -107,22 +112,42 @@ self.addEventListener('fetch', event => {
   
 });
 
-function getFromCacheOrFetch(cache_id, request) {
-  return caches.open(cache_id)
-    .then((cache) => cache.match(request)
-      .then((match) => match || fetch(request))
-        .then((response) => {
-          cache.put(request, response.clone());
-          return response;
-        }, (error) => console.error('Error :', error))
-    , (error) => console.error('Error: ', error))
+const fetchOnce = ({ url }) => {
+  if (requestFetched.indexOf(url) === -1) {
+    requestFetched.push(url);
+    return fetch(url);
+  }
+  return Promise.reject();
 }
+
+async function handleError(error, { url }) {
+  console.error(error);
+  if (url.match(/\.(jpe?g|webp)$/i)) {
+    const cache = await caches.open(CURRENT_CACHES.CACHE_STATIC);
+    return cache.match('assets/img/svg/no-wifi.svg');
+  }
+}
+
+async function getFromCacheOrFetch(cache_id, request) {
+  const cache = await caches.open(cache_id);
+  const match = await cache.match(request);
+
+  if (match) {
+    return match;
+  }
+  const response = await fetch(request).catch((e) =>  handleError(e, request));
+  if (!response.url.match(/no-wifi.svg$/i)) {
+    cache.put(request, response.clone());
+  }
+  return response;
+}
+
 
 async function postLocalReviews() {
   const store = 'posts';
   const reviews = await idbKey.getAll(store).catch(err => console.error(err));
   
-  const promises = await Promise.all(reviews
+  return await Promise.all(reviews
     .map(review => {
       return DBHelper.DATABASE_URL.POST.newReview(review)
         .then(response => {
@@ -135,7 +160,6 @@ async function postLocalReviews() {
         })
         .catch(error => {
           self.registration.showNotification("Your review will be posted later");
-          self.registration.showNotification("You can quit this app if needed");
           console.error('Review not posted',error);
         })
     }))

@@ -1,1 +1,1284 @@
-!function(){return function e(t,n,r){function o(s,i){if(!n[s]){if(!t[s]){var c="function"==typeof require&&require;if(!i&&c)return c(s,!0);if(a)return a(s,!0);var l=new Error("Cannot find module '"+s+"'");throw l.code="MODULE_NOT_FOUND",l}var d=n[s]={exports:{}};t[s][0].call(d.exports,function(e){return o(t[s][1][e]||e)},d,d.exports,e,t,n,r)}return n[s].exports}for(var a="function"==typeof require&&require,s=0;s<r.length;s++)o(r[s]);return o}}()({1:[function(e,t,n){const r=e("./indexedb"),o="/restaurants/",a="/reviews/",s="?is_favorite=",i="?restaurant_id=",c="http://localhost:1337";console.log(c+a+i+2);const l={DATABASE_URL:{GET:{allRestaurants:()=>fetch(c+o),allReviews:()=>fetch(c+a),restaurant:e=>fetch(c+o+e),restaurantReviews:e=>fetch(c+a+i+e),setFavoriteRestaurants:e=>fetch(c+o+s+e)},POST:{newReview:e=>fetch(c+a,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(e)})},PUT:{favoriteRestaurant:(e,t)=>fetch(c+o+e+s+t,{method:"PUT"}),updateReview:e=>fetch(c+a+e,{method:"PUT"})},DELETE:{review:e=>fetch(c+a+e,{method:"DELETE"})}},fetchRestaurants:()=>{return r.getAll("restaurants").then(e=>e.length<10?l.DATABASE_URL.GET.allRestaurants().then(e=>e.json()).then(e=>(console.log("- Restaurants data fetched !"),e.restaurants||e)).then(e=>(e.forEach(e=>r.set("restaurants",e)),e)).catch(e=>console.error(`Request failed. Returned status of ${e}`)):e).catch(e=>{console.error(e)})},fetchReviews:()=>{return r.getAll("reviews").then(e=>e.reverse()).then(e=>e.length<10?l.DATABASE_URL.GET.allReviews().then(e=>e.json()).then(e=>(console.log("- Reviews data fetched !"),e.reviews||e)).catch(e=>console.error(`Request failed. Returned status of ${e}`)):e).catch(e=>{console.error(e)})},fetchRestaurantReviews:e=>{return r.getAll("reviews").then(t=>t.filter(t=>t.restaurant_id===e).length<10?l.DATABASE_URL.GET.restaurantReviews(e).then(e=>e.json()).then(e=>(console.log("- Restaurant reviews fetched !"),e.reviews||e)).then(e=>(e.forEach(e=>r.set("reviews",e)),e)).catch(e=>console.error(`Request failed. Returned status of ${e}`)):t).catch(e=>{console.error(e)})},fetchRestaurantById:e=>{return r.get("restaurants",Number(e)).then(t=>t||(console.log("- No restaurant cached"),l.DATABASE_URL.GET.restaurant(e).then(e=>e.json()).then(e=>(r.set("restaurants",e),e)).catch(e=>console.error(`Restaurant does not exist: ${e}`))))},fetchRestaurantByCuisineAndNeighborhood:(e,t)=>{return r.getAll("restaurants").then(n=>n.length<10?l.fetchRestaurants().then(n=>{const o=n;return o.forEach(e=>r.set("restaurants",e)),l.filterResults(o,e,t)}).catch(e=>console.error(e)):l.filterResults(n,e,t)).catch(e=>console.error(e))},filterResults:(e,t,n)=>("all"!==t&&(e=e.filter(e=>e.cuisine_type==t)),"all"!==n&&(e=e.filter(e=>e.neighborhood==n)),e),addNeighborhoodsOptions:e=>{const t=e.map(e=>e.neighborhood);return t.filter((e,n)=>t.indexOf(e)==n)},addCuisinesOptions:e=>{const t=e.map(e=>e.cuisine_type);return t.filter((e,n)=>t.indexOf(e)==n)},urlForRestaurant:e=>`restaurant.html?id=${e.id}`,imageUrlForRestaurant:e=>`assets/img/jpg/${e.photograph}`,imageWebpUrlForRestaurant:e=>`assets/img/webp/${e.photograph}`,postReview:async e=>{console.log("Trying to post review..."),e.preventDefault();const t=document.querySelector("#title-container form").elements,n={restaurant_id:Number(window.location.search.match(/\d+/)[0]),name:t.name.value,rating:Number(t.rating.value),comments:t.comments.value};await r.set("posts",n),await r.addReview("reviews",n);const o=await navigator.serviceWorker.ready;Notification.requestPermission().then(function(e){"denied"!==e?"default"!==e?"granted"===e&&console.log("Notification allowed"):console.log("The permission request was dismissed."):console.log("Permission wasn't granted. Allow a retry.")}),o.sync.register("post-review"),location.reload(),o.sync.getTags().then(e=>console.log(e))},mapMarkerForRestaurant:(e,t)=>{return new google.maps.Marker({position:{lat:e.lat||e.latlng.lat,lng:e.lng||e.latlng.lng},title:e.name,url:l.urlForRestaurant(e),map:t,animation:google.maps.Animation.DROP,icon:"assets/img/svg/marker.svg"})}};t.exports=l},{"./indexedb":3}],2:[function(e,t,n){const r=document.querySelector(".filter-options"),o=document.getElementById("menuFilter");filterResultHeading=document.querySelector(".filter-options h3");const a={goToRestaurantPage:e=>{e.target.classList.toggle("move-left"),window.location.assign(e.target.dataset.url)},fixedOnViewport:(e,t)=>{const n=t.cloneNode(!0);if(n.className="fixed exclude",t.appendChild(n),"IntersectionObserver"in window){new IntersectionObserver(function(e,r){e.forEach(function(e){e.intersectionRatio<=.01?(n.classList.remove("exclude"),n.classList.add("shadow"),t.classList.add("shadow")):(t.classList.contains("shadow")&&t.classList.remove("shadow"),n.classList.remove("shadow"),n.classList.add("exclude"))})},{root:null,threshold:[.01],rootMargin:"0px"}).observe(e)}},toggleMenu:()=>{r.classList.toggle("optionsOpen"),r.setAttribute("aria-hidden","false"),o.classList.toggle("pressed"),o.blur(),filterResultHeading.setAttribute("tabindex","-1"),filterResultHeading.focus()},isFormValid:()=>{document.querySelector("form").checkValidity()?document.querySelector('form input[type="submit"]').style.color="green":document.querySelector('form input[type="submit"]').style.color="#ca0000"},toggleForm:()=>{document.getElementById("title-container").classList.toggle("reviews-toggled"),document.getElementById("reviews-list").classList.toggle("reviews-toggled"),document.querySelector("section form").classList.toggle("toggled-display"),setTimeout(()=>{document.querySelector("section form").classList.toggle("toggled-translate")},800)},lazyLoading:()=>{const e=[].slice.call(document.querySelectorAll(".lazy"));if("IntersectionObserver"in window){const t={root:null,threshold:[],rootMargin:"200px"};for(let e=0;e<=1;e+=.01)t.threshold.push(Math.round(100*e)/100);let n=new IntersectionObserver(function(e,t){e.forEach(function(e){if(e.isIntersecting||e.intersectionRatio>=.01){let t=e.target;"source"===t.localName?t.srcset=t.dataset.srcset:t.src=t.dataset.src,t.classList.remove("lazy"),n.unobserve(t)}})},t);e.forEach(function(e){n.observe(e)}),document.onreadystatechange=(()=>{"complete"==document.readyState&&a.lazyLoading()})}else{let e=[].slice.call(document.querySelectorAll(".lazy")),t=!1;const n=function(){if(!1===t){t=!0;const r=window.innerHeight+200;e.forEach(function(t){t.getBoundingClientRect().top<=r&&t.getBoundingClientRect().bottom>=0&&"none"!==getComputedStyle(t).display&&(t.src=t.dataset.src,t.srcset=t.dataset.srcset,t.classList.remove("lazy"),0===(e=e.filter(function(e){return e!==t})).length&&(document.removeEventListener("scroll",n),window.removeEventListener("resize",n),window.removeEventListener("orientationchange",n)))}),t=!1}};document.addEventListener("scroll",n),window.addEventListener("resize",n),window.addEventListener("orientationchange",n),"complete"==document.readyState&&(console.log("document ready for lazy load"),n()),document.onreadystatechange=function(){"complete"==document.readyState&&(console.log("document ready for lazy load"),n())}}},sortByNote:(e,t)=>{const n=a.getAverageNote(e.reviews),r=a.getAverageNote(t.reviews);return r>n?1:r<n?-1:0},sortByName:(e,t)=>e.name>t.name,sortByNameInverted:(e,t)=>e.name<t.name,getAverageNote:(e,t=self.reviews)=>{let n=0,r=0;return t.forEach(t=>{t.restaurant_id===e&&(n+=Number(t.rating),r++)}),n/=r,Math.round(10*n)/10}};t.exports=a},{}],3:[function(e,t,n){const r=e("../../node_modules/idb/lib/idb"),o=()=>r.open("restaurant-reviews",3,e=>{switch(e.oldVersion){case 0:e.createObjectStore("restaurants",{keyPath:"id"});case 1:e.createObjectStore("reviews",{keyPath:"id",autoIncrement:!0});case 1:e.createObjectStore("posts",{keyPath:"restaurant_id"})}}),a={get:(e,t)=>o().then(n=>{if(n)return n.transaction(e).objectStore(e).get(t)}).catch(e=>console.error(e)),set:(e,t)=>o().then(n=>{if(!n)return;return n.transaction(e,"readwrite").objectStore(e).put(t).complete}).catch(e=>console.error(e)),getAll:e=>o().then(t=>{if(t)return t.transaction(e).objectStore(e).getAll()}).catch(e=>console.error(e)),delete:(e,t)=>o().then(n=>{if(n)return n.transaction(e,"readwrite").objectStore(e).delete(t)}).catch(e=>console.error(e)),addReview:(e,t)=>o().then(n=>{if(n)return n.transaction(e,"readwrite").objectStore(e).add(t)}).catch(e=>console.error(e)),getRestaurantReviews:(e,t)=>o().then(n=>{if(n)return n.transaction(e).objectStore(e).getAll().then(e=>e.filter(e=>e.restaurant_id===t))}).catch(e=>console.error(e))};t.exports=a},{"../../node_modules/idb/lib/idb":5}],4:[function(e,t,n){const r=e("./dbhelper"),o=e("./helpers");const a=document.getElementById("map-loader");window.addEventListener("load",()=>{if("serviceWorker"in navigator&&"SyncManager"in window){const e="hallya.github.io"===window.location.hostname?"/mws-restaurant-stage-1/sw.js":"../sw.js";navigator.serviceWorker.register(e).then(e=>{e.sync.register("post-review"),e.sync.register("fetch-new-reviews"),console.log('Registered to SW & "post-review" sync tag & "fetch-new-reviews" tag')})}}),window.initMap=(()=>{s().then(e=>{const t=document.createElement("div");t.setAttribute("tabindex","-1"),t.setAttribute("aria-hidden","true"),t.id="map",self.map=new google.maps.Map(t,{zoom:16,center:{lat:e.lat||e.latlng.lat,lng:e.lng||e.latlng.lng},streetViewControl:!0,mapTypeId:"roadmap"}),document.getElementById("map-container").appendChild(t),self.map.addListener("tilesloaded",function(){a.classList.toggle("hidden")}),r.mapMarkerForRestaurant(self.restaurant,self.map),p()}).then(o.lazyLoading).catch(e=>console.error(e))});const s=()=>{if(self.restaurant)return void console.log("- Restaurant already fetch");const e=g("id");return e?Promise.all([r.fetchRestaurantById(e),r.fetchRestaurantReviews(e)]).then(e=>(self.reviews=e[1].reverse(),self.restaurant=e[0])).then(i).catch(e=>console.error(e)):console.error("No restaurant id in URL")},i=(e=self.restaurant)=>{document.getElementById("restaurant-name").innerHTML=e.name;const t=document.getElementById("restaurant-address");t.innerHTML=e.address,t.setAttribute("aria-label",`located at ${e.address}`);const n=document.getElementsByTagName("figure")[0],o=document.getElementsByTagName("figcaption")[0],a=document.createElement("picture"),s=document.createElement("source");s.dataset.srcset=`${r.imageWebpUrlForRestaurant(e)}-large_x1.webp 1x, ${r.imageWebpUrlForRestaurant(e)}-large_x2.webp 2x`,s.srcset="assets/img/svg/puff.svg",s.className="lazy",s.media="(min-width: 1000px)",s.type="image/webp";const i=document.createElement("source");i.dataset.srcset=`${r.imageUrlForRestaurant(e)}-large_x1.jpg 1x, ${r.imageUrlForRestaurant(e)}-large_x2.jpg 2x`,i.srcset="assets/img/svg/puff.svg",i.className="lazy",i.media=s.media,i.type="image/jpeg";const d=document.createElement("source");d.dataset.srcset=`${r.imageWebpUrlForRestaurant(e)}-medium_x1.webp 1x, ${r.imageWebpUrlForRestaurant(e)}-medium_x2.webp 2x`,d.srcset="assets/img/svg/puff.svg",d.className="lazy",d.media="(min-width: 420px)",d.type="image/webp";const u=document.createElement("source");u.dataset.srcset=`${r.imageUrlForRestaurant(e)}-medium_x1.jpg 1x, ${r.imageUrlForRestaurant(e)}-medium_x2.jpg 2x`,u.srcset="assets/img/svg/puff.svg",u.className="lazy",u.media=d.media,u.type="image/jpeg";const m=document.createElement("source");m.dataset.srcset=`${r.imageWebpUrlForRestaurant(e)}-small_x2.webp 2x, ${r.imageWebpUrlForRestaurant(e)}-small_x1.webp 1x`,m.srcset="assets/img/svg/puff.svg",m.className="lazy",m.media="(min-width: 320px)",m.type="image/webp";const p=document.createElement("source");p.dataset.srcset=`${r.imageUrlForRestaurant(e)}-small_x2.jpg 2x, ${r.imageUrlForRestaurant(e)}-small_x1.jpg 1x`,p.srcset="assets/img/svg/puff.svg",p.className="lazy",p.media=m.media,p.type="image/jpeg";const g=document.createElement("img");g.className="restaurant-img lazy",g.dataset.src=`${r.imageUrlForRestaurant(e)}-large_x1.jpg`,g.src="assets/img/svg/puff.svg",g.setAttribute("sizes","(max-width: 1100px) 85vw, (min-width: 1101px) 990px"),g.alt=`${e.name}'s  restaurant`,g.type="image/jpeg",a.appendChild(s),a.appendChild(i),a.appendChild(d),a.appendChild(u),a.appendChild(m),a.appendChild(p),a.appendChild(g),n.insertBefore(a,o);const h=document.getElementById("restaurant-cuisine");h.innerHTML=e.cuisine_type;const f=document.createElement("label");return f.innerHTML=`${e.cuisine_type} food`,f.setAttribute("hidden","hidden"),f.id="foodType",h.parentNode.insertBefore(f,h.nextSibling),e.operating_hours&&c(),l(),e},c=(e=self.restaurant.operating_hours)=>{const t=document.getElementById("restaurant-hours");for(let n in e){const r=document.createElement("tr"),o=document.createElement("td");o.innerHTML=n,o.setAttribute("aria-label",`open on ${n}`),r.appendChild(o);const a=document.createElement("td");a.innerHTML=e[n],a.setAttribute("aria-label",`${e[n]},`),r.appendChild(a),r.setAttribute("role","row"),t.appendChild(r)}},l=(e=self.restaurant.reviews||self.reviews)=>{if(!e){const e=document.createElement("p");return e.innerHTML="No reviews yet!",t.appendChild(e)}e=e.filter(e=>e.restaurant_id===self.restaurant.id),self.reviews=e;const t=document.getElementById("reviews-container"),n=document.createElement("div"),r=document.createElement("h3"),o=document.createElement("button"),a=document.createElement("span"),s=document.createElement("span");r.innerHTML="Reviews",a.innerHTML="+",s.innerHTML="-",s.className="toggled",n.id="title-container",o.addEventListener("click",d),o.appendChild(a),o.appendChild(s),n.appendChild(r),n.appendChild(o),t.appendChild(n);const i=document.getElementById("reviews-list");e.forEach(e=>{i.appendChild(m(e))}),t.appendChild(i)},d=()=>{const e=document.createElement("form"),t=document.createElement("label"),n=document.createElement("input"),a=document.createElement("fieldset");e.autocomplete="on",n.id="form-name",n.type="text",n.name="name",n.placeholder="Your name",n.minLength="2",n.maxLength="50",n.pattern="^[a-zA-Zs]+$",n.required=!0,t.setAttribute("for",n.id),t.className="visuallyHidden",t.innerHTML="Enter your name",a.className="new-rating";for(let e=5;e>0;e--){const t=document.createElement("input"),n=document.createElement("label");t.type="radio",t.id=`star${e}`,t.name="rating",t.value=e,t.class="visuallyHidden",t.required=!0,t.addEventListener("input",o.isFormValid),n.setAttribute("for",`star${e}`),n.title="It was",a.appendChild(t),a.appendChild(n)}const s=document.createElement("label"),i=document.createElement("textarea"),c=document.createElement("label"),l=document.createElement("input");i.id="form-comment",i.name="comments",i.type="text",i.required=!0,i.minLength=3,i.maxLength=5e3,i.placeholder="Your comment",i.addEventListener("keydown",h),s.setAttribute("for",i.id),s.className="visuallyHidden",s.innerHTML="Enter your opinion about this restaurant",l.id="form-submit",l.type="submit",l.value="Save",c.setAttribute("for",l.id),c.className="visuallyHidden",n.addEventListener("change",o.isFormValid),i.addEventListener("input",o.isFormValid),e.appendChild(t),e.appendChild(n),e.appendChild(a),e.appendChild(s),e.appendChild(i),e.appendChild(l),e.appendChild(c),e.addEventListener("submit",r.postReview),document.getElementById("title-container").classList.toggle("form-open"),document.getElementById("title-container").appendChild(e),e.classList.toggle("form-toggled"),setTimeout(()=>{},300),document.querySelector("#title-container button").removeEventListener("click",d),document.querySelector("#title-container button").addEventListener("click",u),document.querySelectorAll("#title-container button span").forEach(e=>e.classList.toggle("toggled"))},u=()=>{document.querySelector("#title-container form").classList.toggle("form-toggled"),document.getElementById("title-container").classList.toggle("form-open"),setTimeout(()=>{document.querySelector("#title-container form").remove()},300),document.querySelectorAll("#title-container button span").forEach(e=>e.classList.toggle("toggled")),document.querySelector("#title-container button").removeEventListener("click",u),document.querySelector("#title-container button").addEventListener("click",d)},m=e=>{const t=document.createElement("li"),n=document.createElement("p");n.className="userName",n.innerHTML=e.name,n.setAttribute("aria-label",`${e.name},`),t.appendChild(n);const r=document.createElement("p");r.className="dateReview";const o=new Date(e.updatedAt);r.innerHTML=o.toDateString(),r.setAttribute("aria-label",`${r.innerHTML},`),t.appendChild(r);const a=document.createElement("p");let s=document.createElement("span");a.className="userRating",s.className="ratingStars";for(let t=0;t<e.rating;t++){const e=document.createElement("span");e.innerHTML+="★",e.id=`star${t+1}`,s.appendChild(e)}s.setAttribute("aria-label",`${e.rating} stars on 5,`),a.innerHTML="Rating: ",a.appendChild(s),t.appendChild(a);const i=document.createElement("p");return i.className="userComments",i.innerHTML=e.comments,t.appendChild(i),t.setAttribute("role","listitem"),t.setAttribute("aria-setsize",self.reviews),t.setAttribute("aria-posinset",self.reviews.indexOf(e)+1),t},p=(e=self.restaurant)=>{const t=document.getElementById("breadcrumb"),n=document.createElement("li");n.innerHTML=` ${e.name}`,n.className="fontawesome-arrow-right",n.setAttribute("aria-current","page"),t.appendChild(n),o.fixedOnViewport(document.querySelector("nav"),document.querySelector("#breadcrumb"))},g=(e,t)=>{t||(t=window.location.href),e=e.replace(/[\[\]]/g,"\\$&");const n=new RegExp(`[?&]${e}(=([^&#]*)|&|#|$)`).exec(t);return n?n[2]?decodeURIComponent(n[2].replace(/\+/g," ")):"":null};function h(){document.getElementById("title-container").style.height="auto",this.style.cssText="height:auto; padding:0",this.style.cssText="height:"+this.scrollHeight+"px"}},{"./dbhelper":1,"./helpers":2}],5:[function(e,t,n){"use strict";!function(){function e(e){return new Promise(function(t,n){e.onsuccess=function(){t(e.result)},e.onerror=function(){n(e.error)}})}function n(t,n,r){var o,a=new Promise(function(a,s){e(o=t[n].apply(t,r)).then(a,s)});return a.request=o,a}function r(e,t,n){n.forEach(function(n){Object.defineProperty(e.prototype,n,{get:function(){return this[t][n]},set:function(e){this[t][n]=e}})})}function o(e,t,r,o){o.forEach(function(o){o in r.prototype&&(e.prototype[o]=function(){return n(this[t],o,arguments)})})}function a(e,t,n,r){r.forEach(function(r){r in n.prototype&&(e.prototype[r]=function(){return this[t][r].apply(this[t],arguments)})})}function s(e,t,r,o){o.forEach(function(o){o in r.prototype&&(e.prototype[o]=function(){return e=this[t],(r=n(e,o,arguments)).then(function(e){if(e)return new c(e,r.request)});var e,r})})}function i(e){this._index=e}function c(e,t){this._cursor=e,this._request=t}function l(e){this._store=e}function d(e){this._tx=e,this.complete=new Promise(function(t,n){e.oncomplete=function(){t()},e.onerror=function(){n(e.error)},e.onabort=function(){n(e.error)}})}function u(e,t,n){this._db=e,this.oldVersion=t,this.transaction=new d(n)}function m(e){this._db=e}r(i,"_index",["name","keyPath","multiEntry","unique"]),o(i,"_index",IDBIndex,["get","getKey","getAll","getAllKeys","count"]),s(i,"_index",IDBIndex,["openCursor","openKeyCursor"]),r(c,"_cursor",["direction","key","primaryKey","value"]),o(c,"_cursor",IDBCursor,["update","delete"]),["advance","continue","continuePrimaryKey"].forEach(function(t){t in IDBCursor.prototype&&(c.prototype[t]=function(){var n=this,r=arguments;return Promise.resolve().then(function(){return n._cursor[t].apply(n._cursor,r),e(n._request).then(function(e){if(e)return new c(e,n._request)})})})}),l.prototype.createIndex=function(){return new i(this._store.createIndex.apply(this._store,arguments))},l.prototype.index=function(){return new i(this._store.index.apply(this._store,arguments))},r(l,"_store",["name","keyPath","indexNames","autoIncrement"]),o(l,"_store",IDBObjectStore,["put","add","delete","clear","get","getAll","getKey","getAllKeys","count"]),s(l,"_store",IDBObjectStore,["openCursor","openKeyCursor"]),a(l,"_store",IDBObjectStore,["deleteIndex"]),d.prototype.objectStore=function(){return new l(this._tx.objectStore.apply(this._tx,arguments))},r(d,"_tx",["objectStoreNames","mode"]),a(d,"_tx",IDBTransaction,["abort"]),u.prototype.createObjectStore=function(){return new l(this._db.createObjectStore.apply(this._db,arguments))},r(u,"_db",["name","version","objectStoreNames"]),a(u,"_db",IDBDatabase,["deleteObjectStore","close"]),m.prototype.transaction=function(){return new d(this._db.transaction.apply(this._db,arguments))},r(m,"_db",["name","version","objectStoreNames"]),a(m,"_db",IDBDatabase,["close"]),["openCursor","openKeyCursor"].forEach(function(e){[l,i].forEach(function(t){e in t.prototype&&(t.prototype[e.replace("open","iterate")]=function(){var t,n=(t=arguments,Array.prototype.slice.call(t)),r=n[n.length-1],o=this._store||this._index,a=o[e].apply(o,n.slice(0,-1));a.onsuccess=function(){r(a.result)}})})}),[i,l].forEach(function(e){e.prototype.getAll||(e.prototype.getAll=function(e,t){var n=this,r=[];return new Promise(function(o){n.iterateCursor(e,function(e){e?(r.push(e.value),void 0===t||r.length!=t?e.continue():o(r)):o(r)})})})});var p={open:function(e,t,r){var o=n(indexedDB,"open",[e,t]),a=o.request;return a&&(a.onupgradeneeded=function(e){r&&r(new u(a.result,e.oldVersion,a.transaction))}),o.then(function(e){return new m(e)})},delete:function(e){return n(indexedDB,"deleteDatabase",[e])}};void 0!==t?(t.exports=p,t.exports.default=t.exports):self.idb=p}()},{}]},{},[4]);
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const idbKey = require('./indexedb');
+
+const scheme = 'http://',
+  host = 'localhost',
+  port = ':1337',
+  path = {
+    restaurants: '/restaurants/',
+    reviews: '/reviews/'
+  },
+  query = {
+    is_favorite: '/?is_favorite=',
+    restaurant_id: '?restaurant_id='
+  },
+
+  baseURI = scheme + host + port;
+  
+const DBHelper = {
+
+  DATABASE_URL:{
+    GET: {
+      allRestaurants: () => fetch(baseURI + path.restaurants),
+      allReviews: () => fetch(baseURI + path.reviews),
+      restaurant: (id) => fetch(baseURI + path.restaurants + id ),
+      restaurantReviews: (id) => fetch(baseURI + path.reviews + query.restaurant_id + id)
+    },
+    POST: {
+      newReview: (body) => fetch(baseURI + path.reviews, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      })
+    },
+    PUT: {
+      favoriteRestaurant: (id, answer) => fetch(baseURI + path.restaurants + id + query.is_favorite + answer, {
+        method: 'PUT'
+      }),
+      updateReview: (id) => fetch(baseURI + path.reviews + id, {
+        method: 'PUT'
+      })
+    },
+    DELETE: {
+      review: (id) => fetch(baseURI + path.reviews + id, {
+        method: 'DELETE'
+      })
+    }
+  },
+  /**
+   * Fetch all restaurants.
+   */
+  fetchRestaurants: () => {
+    const store = 'restaurants';
+    return idbKey.getAll(store)
+    .then(restaurants => {
+      if (restaurants.length < 10) {
+        return DBHelper.DATABASE_URL.GET.allRestaurants()
+        .then(response => response.json())
+        .then(restaurants => {
+          console.log('- Restaurants data fetched !');
+          return restaurants.restaurants || restaurants;
+        })
+        .then(restaurants => {
+          restaurants.forEach(restaurant => {
+            restaurant.is_favorite = restaurant.is_favorite.toString();
+            idbKey.set(store, restaurant);
+          });
+          return restaurants;
+        })
+        .catch(error => console.error(`Request failed. Returned status of ${error}`));
+      } else {
+        return restaurants;
+      }
+    }).catch(error => {
+      console.error(error)
+    });
+  },
+  /**
+   * Fetch all reviews.
+   */
+  fetchReviews: () => {
+    const store = 'reviews';
+    return idbKey.getAll(store)
+    .then(reviews => {
+      if (reviews.length < 10) {
+        return DBHelper.DATABASE_URL.GET.allReviews()
+        .then(response => response.json())
+        .then(reviews => {
+          console.log('- Reviews data fetched !');
+          return reviews.reviews || reviews;
+        })
+        .catch(error => console.error(`Request failed. Returned status of ${error}`));
+      } else {
+        return reviews;
+      }
+    }).catch(error => {
+      console.error(error)
+    });
+  },
+  
+  /**
+   * Fetch restaurant reviews.
+   */
+  fetchRestaurantReviews: (id) => {
+    const store = 'reviews';
+    return idbKey.getAll(store).then(reviews => {
+      if (!reviews.length) {
+        return DBHelper.DATABASE_URL.GET.restaurantReviews(id)
+        .then(response => response.json())
+        .then(reviews => {
+          console.log('- Restaurant reviews fetched !');
+          return reviews.reviews || reviews;
+        })
+        .then(reviews => {
+          reviews.forEach(review => idbKey.set(store, review));
+          return reviews;
+        })
+        .catch(error => console.error(`Request failed. Returned status of ${error}`));
+      } else {
+        return reviews;
+      }
+    }).catch(error => {
+      console.error(error)
+    });
+  },
+  
+  /**
+   * Fetch a restaurant by its ID.
+   */
+  fetchRestaurantById: (id) => {
+    // fetch all restaurants with proper error handling.
+    const store = 'restaurants';
+
+    return idbKey.get(store, Number(id))
+      .then((restaurant) => {
+        if (!restaurant) {
+          console.log('- No restaurant cached');
+          return DBHelper.DATABASE_URL.GET.restaurant(id)
+            .then(response => response.json())
+            .then(restaurant => {
+              restaurant.is_favorite = restaurant.is_favorite.toString();
+              idbKey.set(store, restaurant);
+              return restaurant;
+            })
+            .catch(error => console.error(`Restaurant does not exist: ${error}`));
+        } else {
+          return restaurant;
+        }
+      })
+  },
+
+  /**
+   * Fetch restaurants by a cuisine and a neighborhood with proper error handling.
+   */
+  fetchRestaurantByCuisineAndNeighborhood: (cuisine, neighborhood) => {
+    // Fetch all restaurants
+    const store = 'restaurants';
+    return idbKey.getAll(store)
+      .then((cachedResults) => {
+        if (cachedResults.length < 10) {
+          return DBHelper.fetchRestaurants()
+            .then(restaurants => {
+              const results = restaurants;
+              results.forEach((restaurant) => idbKey.set(store, restaurant));
+              return DBHelper.filterResults(results, cuisine, neighborhood);
+            })
+            .catch(error => console.error(error));
+        } else {
+          return DBHelper.filterResults(cachedResults, cuisine, neighborhood);
+        }
+      }).catch((error) => console.error(error));
+  },
+
+  filterResults: (results, cuisine, neighborhood) => {
+    if (cuisine !== 'all') {
+      results = results.filter(restaurant => restaurant.cuisine_type == cuisine);
+    }
+    if (neighborhood !== 'all') {
+      results = results.filter(restaurant => restaurant.neighborhood == neighborhood);
+    }
+    return results;
+  },
+  /**
+   * Fetch all neighborhoods with proper error handling.
+   */
+  addNeighborhoodsOptions: (restaurants) => {
+    // Get all neighborhoods from all restaurants
+    const neighborhoods = restaurants.map(restaurant => restaurant.neighborhood);
+    // Remove duplicates from neighborhoods
+    const uniqueNeighborhoods = neighborhoods.filter((v, i) => neighborhoods.indexOf(v) == i);
+    return uniqueNeighborhoods;
+  },
+
+  /**
+   * Fetch all cuisines with proper error handling.
+   */
+  addCuisinesOptions: (restaurants) => {
+    // Get all cuisines from all restaurants
+    const cuisines = restaurants.map(restaurant => restaurant.cuisine_type);
+    // Remove duplicates from cuisines
+    const uniqueCuisines = cuisines.filter((v, i) => cuisines.indexOf(v) == i);
+    return uniqueCuisines;
+  },
+
+  /**
+   * Restaurant page URL.
+   */
+  urlForRestaurant: (restaurant) => {
+    return (`restaurant.html?id=${restaurant.id}`);
+  },
+
+  /**
+   * Restaurant image URL.
+   */
+  imageUrlForRestaurant: (restaurant) => {
+    return (`assets/img/jpg/${restaurant.photograph}`);
+  },
+  
+  imageWebpUrlForRestaurant: (restaurant) => {
+    return (`assets/img/webp/${restaurant.photograph}`);
+  },
+
+  postReview: async (e) => {
+    console.log('Trying to post review...')
+    e.preventDefault();
+    const form = document.querySelector('#title-container form').elements;
+    const body = {
+      restaurant_id: Number(window.location.search.match(/\d+/)[0]),
+      name: form["name"].value,
+      rating: Number(form["rating"].value),
+      comments: form["comments"].value,
+    }
+    await idbKey.set('posts', body);
+    body.createdAt = Date.now(),
+    body.updatedAt = Date.now();
+    await idbKey.addReview('reviews', body);
+    const registration = await navigator.serviceWorker.ready
+    Notification.requestPermission()
+      .then(function (result) {
+        if (result === 'denied') {
+          console.log('Permission wasn\'t granted. Allow a retry.');
+          return;
+        }
+        if (result === 'default') {
+          console.log('The permission request was dismissed.');
+          return;
+        }
+        if (result === 'granted') { 
+          console.log('Notification allowed')
+        }
+      });
+    await registration.sync.register('post-review');
+    location.reload();
+  },
+
+  setFavorite: async (target, restaurant) => {
+    target.classList.toggle('hidden');
+    const favorite = restaurant.is_favorite === 'true'? 'false' : 'true';
+    const store = 'restaurants';
+    restaurant.is_favorite = favorite;
+    await idbKey.set(store, restaurant);
+    return await DBHelper.DATABASE_URL.PUT.favoriteRestaurant(restaurant.id, favorite);
+  },
+  /**
+   * Map marker for a restaurant.
+   */
+  mapMarkerForRestaurant: (restaurant, map) => {
+    const marker = new google.maps.Marker({
+      position: {
+        lat: restaurant.lat || restaurant.latlng.lat,
+        lng: restaurant.lng || restaurant.latlng.lng
+      },
+      title: restaurant.name,
+      url: DBHelper.urlForRestaurant(restaurant),
+      map: map,
+      animation: google.maps.Animation.DROP,
+      icon: 'assets/img/svg/marker.svg'
+    });
+    return marker;
+  }
+};
+
+module.exports = DBHelper;
+},{"./indexedb":3}],2:[function(require,module,exports){
+const
+  filterOptions = document.querySelector('.filter-options'),
+  filterButton = document.getElementById('menuFilter');
+  filterResultHeading = document.querySelector('.filter-options h3');
+  
+const launch = {
+  goToRestaurantPage: (e) => {
+    e.target.classList.toggle('move-left');
+    window.location.assign(e.target.dataset.url)
+  },
+  fixedOnViewport: (referer, target) => {
+
+    const clonedTarget = target.cloneNode(true);
+    clonedTarget.className = 'fixed exclude';
+
+    target.appendChild(clonedTarget);
+    
+    if ('IntersectionObserver' in window) {
+      const options = {
+        root: null,
+        threshold: [0.01],
+        rootMargin: "0px"
+      }
+      
+      const observer = new IntersectionObserver(function (entries, observer) {
+        entries.forEach(function (entry) {
+          
+          if (entry.intersectionRatio <= .01) {
+            clonedTarget.classList.remove('exclude');
+            clonedTarget.classList.add('shadow');
+            target.classList.add('shadow');
+          } else {
+            if (target.classList.contains('shadow')){ target.classList.remove('shadow');}
+            clonedTarget.classList.remove('shadow');
+            clonedTarget.classList.add('exclude');
+          }
+        });
+      },options);
+      observer.observe(referer);
+    }
+  },
+
+  toggleMenu: () => {
+    filterOptions.classList.toggle('optionsOpen');
+    filterOptions.setAttribute('aria-hidden', 'false');
+    filterButton.classList.toggle('pressed');
+    filterButton.blur();
+    filterResultHeading.setAttribute('tabindex', '-1');
+    filterResultHeading.focus();
+  },
+  isFormValid: () => {
+    if (document.querySelector('form').checkValidity()) {
+      document.querySelector('form input[type="submit"]').style.color = "green";
+    } else {
+      document.querySelector('form input[type="submit"]').style.color = "#ca0000";
+    }
+  },
+  toggleForm: () => {
+    document.getElementById('title-container').classList.toggle("reviews-toggled");
+    document.getElementById('reviews-list').classList.toggle("reviews-toggled");
+    document.querySelector('section form').classList.toggle("toggled-display");
+    setTimeout(() => {
+      document.querySelector('section form').classList.toggle("toggled-translate");
+    },800)
+  },
+  lazyLoading:() => {
+    const lazyImages = [].slice.call(document.querySelectorAll('.lazy'));
+
+    if ('IntersectionObserver' in window) {
+      const options = {
+        root: null,
+        threshold: [],
+        rootMargin: "200px"
+      }
+      for (let i = 0.00; i <= 1; i += 0.01){
+        options.threshold.push(Math.round(i*100)/100);
+      }
+      let lazyImageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(function (entry) {
+          const lazyImage = entry.target;
+          if (entry.isIntersecting || entry.intersectionRatio >= .01) {
+            if (lazyImage.localName === 'source') {
+              lazyImage.srcset = lazyImage.dataset.srcset;
+            } else {
+              lazyImage.src = lazyImage.dataset.src;
+            }
+            lazyImage.classList.remove('lazy');
+            lazyImageObserver.unobserve(lazyImage);
+          }
+        });
+      }, options);
+      lazyImages.forEach(function (lazyImage) {
+        lazyImageObserver.observe(lazyImage);
+      });
+      document.onreadystatechange = () => {
+        if (document.readyState == "complete") {
+          launch.lazyLoading();
+        }
+      }
+    } else {
+      // Possible fallback to a more compatible method here
+      let lazyImages = [].slice.call(document.querySelectorAll('.lazy'));
+
+      let active = false;
+      const lazyLoad = function () {
+        if (active === false) {
+          active = true;
+          const windowInnerHeight = window.innerHeight + 200;
+
+          // setTimeout(function () {
+          lazyImages.forEach(function (lazyImage) {
+            if ((lazyImage.getBoundingClientRect().top <= windowInnerHeight
+              && lazyImage.getBoundingClientRect().bottom >= 0)
+              && getComputedStyle(lazyImage).display !== 'none') {
+              lazyImage.src = lazyImage.dataset.src;
+              lazyImage.srcset = lazyImage.dataset.srcset;
+              lazyImage.classList.remove('lazy');
+
+              lazyImages = lazyImages.filter(function (image) {
+                return image !== lazyImage;
+              });
+
+              if (lazyImages.length === 0) {
+                document.removeEventListener('scroll', lazyLoad);
+                window.removeEventListener('resize', lazyLoad);
+                window.removeEventListener('orientationchange', lazyLoad);
+              }
+            }
+          });
+
+          active = false;
+          // }, 200);
+        }
+      };
+      document.addEventListener('scroll', lazyLoad);
+      window.addEventListener('resize', lazyLoad);
+      window.addEventListener('orientationchange', lazyLoad);
+      if (document.readyState == "complete") {
+        console.log('document ready for lazy load');
+        lazyLoad();
+      }
+      document.onreadystatechange = function () {
+        if (document.readyState == "complete") {
+          console.log('document ready for lazy load');
+          lazyLoad();
+        }
+      }
+    }
+  },
+  sortByNote: (a, b) => {
+    const aNote = launch.getAverageNote(a.reviews)
+    const bNote = launch.getAverageNote(b.reviews)
+    if (bNote > aNote) {
+      return 1
+    }
+    if (bNote < aNote) {
+      return -1
+    }
+    return 0;
+  },
+  sortByName: (a, b) => {
+    return a.name > b.name;
+  },
+  sortByNameInverted: (a, b) => {
+    return a.name < b.name; 
+  },
+  getAverageNote: (id, reviews = self.reviews) => {
+    let totalRatings = 0;
+    let totalReviews = 0;
+    reviews && reviews.forEach(review => {
+      if (review.restaurant_id === id) {
+        totalRatings += Number(review.rating);
+        totalReviews++;
+      }
+    });
+    totalRatings = totalRatings / totalReviews;
+    return totalRatings && `${(Math.round(totalRatings * 10)) / 10}/5` || 'N/A';
+  },
+  switchToDefaultImage: (event, observer) => {
+    observer.unobserve(event.target);
+    if (event.target.localName === 'source') {
+      return event.target.srcset = 'assets/img/svg/no-wifi.svg';
+    } else {
+      return event.target.src = 'assets/img/svg/no-wifi.svg';
+    }
+  }
+};
+module.exports = launch;
+},{}],3:[function(require,module,exports){
+const idb = require('../../node_modules/idb/lib/idb');
+
+const openDatabase = () => {
+  return idb.open('restaurant-reviews', 3, (upgradeDb) => {
+    switch (upgradeDb.oldVersion) {
+      case 0:
+        upgradeDb.createObjectStore('restaurants', { keyPath: 'id' });
+      case 1:
+        upgradeDb.createObjectStore('reviews', { keyPath: 'id', autoIncrement:true});
+      case 1:
+        upgradeDb.createObjectStore('posts', {keyPath: 'restaurant_id'});
+    }
+  })
+};
+
+const idbKey = {
+  get(store, key) {
+    return openDatabase().then(db => {
+      if (!db) return;
+      return db
+        .transaction(store)
+        .objectStore(store)
+        .get(key);
+    }).catch(error => console.error(error));
+  },
+  set(store, value) {
+    return openDatabase().then(db => {
+      if (!db) return;
+      const tx = db
+        .transaction(store, 'readwrite')
+        .objectStore(store)
+        .put(value);
+      return tx.complete;
+    }).catch(error => console.error(error));
+  },
+  getAll(store) {
+    return openDatabase().then(db => {
+      if (!db) return;
+      return db
+        .transaction(store)
+        .objectStore(store)
+        .getAll();
+    }).catch(error => console.error(error));
+  },
+  delete(store, id) {
+    return openDatabase().then(db => {
+      if (!db) return;
+      return db
+        .transaction(store, 'readwrite')
+        .objectStore(store)
+        .delete(id);
+    }).catch(error => console.error(error));
+  },
+  addReview(store, review) {
+    return openDatabase().then(db => {
+      if (!db) {
+        return;
+      }
+      return db
+        .transaction(store, 'readwrite')
+        .objectStore(store)
+        .add(review);
+    }).catch(error => console.error(error));
+  },
+  getRestaurantReviews(store, key) {
+    return openDatabase().then(db => {
+      if (!db) return;
+      return db
+        .transaction(store)
+        .objectStore(store)
+        .getAll()
+        .then(reviews => reviews.filter(review => review.restaurant_id === key))
+    }).catch(error => console.error(error));
+  }
+};
+module.exports = idbKey;
+},{"../../node_modules/idb/lib/idb":5}],4:[function(require,module,exports){
+const DBHelper = require('./dbhelper');
+const Launch = require('./helpers');
+
+var restaurant;
+var map;
+
+const mapLoader = document.getElementById('map-loader');
+
+window.addEventListener('load', () => {
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    const pathToServiceWorker = window.location.hostname === 'hallya.github.io' ? '/mws-restaurant-stage-1/sw.js' : '../sw.js'
+    navigator.serviceWorker.register(pathToServiceWorker)
+      .then(registration => {
+        registration.sync.register('post-review');
+        registration.sync.register('fetch-new-reviews');
+        console.log('Registered to SW & "post-review" sync tag & "fetch-new-reviews" tag')
+      });
+  }
+});
+/**
+ * Initialize Google map, called from HTML.
+ */
+window.initMap = () => {
+  fetchRestaurantFromURL()
+    .then(restaurant => {
+      const mapPlaceHolder = document.createElement('div');
+      mapPlaceHolder.setAttribute('tabindex', '-1');
+      mapPlaceHolder.setAttribute('aria-hidden', 'true');
+      mapPlaceHolder.id = "map";
+      self.map = new google.maps.Map(mapPlaceHolder, {
+        zoom: 16,
+        center: {
+          lat: restaurant.latlng.lat,
+          lng: restaurant.latlng.lng
+        },
+        streetViewControl: false,
+        zoomControl: true,
+        fullscreenControl: true,
+        mapTypeId: 'roadmap',
+        mapTypeControl: false,
+      })
+      document.getElementById('map-container').appendChild(mapPlaceHolder);
+      self.map.addListener('tilesloaded', function () {
+          mapLoader.classList.toggle('hidden');
+      });
+      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
+      fillBreadcrumb();
+    })
+    .then(Launch.lazyLoading)
+    .catch(error => console.error(error));
+};
+
+/**
+ * Get current restaurant from page URL.
+ */
+const fetchRestaurantFromURL = () => {
+  if (self.restaurant) { // restaurant already fetched!
+    console.log('- Restaurant already fetch');
+    return;
+  }
+  const id = getParameterByName('id');
+  if (!id) { // no id found in URL
+    return console.error('No restaurant id in URL');
+  }
+  return Promise.all([DBHelper.fetchRestaurantById(id), DBHelper.fetchRestaurantReviews(id)])
+    .then(results => {
+
+      self.reviews = results[1] && results[1].reverse();
+      return self.restaurant = results[0];
+    })
+    .then(fillRestaurantHTML)
+    .catch(error => console.error(error));
+};
+
+/**
+ * Create restaurant HTML and add it to the webpage
+ */
+const fillRestaurantHTML = (restaurant = self.restaurant) => {
+  const name = document.getElementById('restaurant-name');
+  name.innerHTML = restaurant.name;
+
+  const address = document.getElementById('restaurant-address');
+  address.innerHTML = restaurant.address;
+  address.setAttribute('aria-label', `located at ${restaurant.address}`);
+  
+  const figure = document.getElementsByTagName('figure')[0];
+  const figcaption = document.getElementsByTagName('figcaption')[0];
+  const picture = document.createElement('picture');
+  
+  const sourceWebp = document.createElement('source');
+  sourceWebp.dataset.srcset = `${DBHelper.imageWebpUrlForRestaurant(restaurant)}-large_x1.webp 1x, ${DBHelper.imageWebpUrlForRestaurant(restaurant)}-large_x2.webp 2x`;
+  sourceWebp.srcset = 'assets/img/svg/puff.svg';
+  sourceWebp.className = 'lazy';
+  sourceWebp.media = '(min-width: 1000px)';
+  sourceWebp.type = 'image/webp';
+  const source = document.createElement('source');
+  source.dataset.srcset = `${DBHelper.imageUrlForRestaurant(restaurant)}-large_x1.jpg 1x, ${DBHelper.imageUrlForRestaurant(restaurant)}-large_x2.jpg 2x`;
+  source.srcset = 'assets/img/svg/puff.svg';
+  source.className = 'lazy';
+  source.media = sourceWebp.media;
+  source.type = 'image/jpeg';
+  
+  
+  const ndSourceWebp = document.createElement('source');
+  ndSourceWebp.dataset.srcset = `${DBHelper.imageWebpUrlForRestaurant(restaurant)}-medium_x1.webp 1x, ${DBHelper.imageWebpUrlForRestaurant(restaurant)}-medium_x2.webp 2x`;
+  ndSourceWebp.srcset = 'assets/img/svg/puff.svg';
+  ndSourceWebp.className = 'lazy';
+  ndSourceWebp.media = '(min-width: 420px)';
+  ndSourceWebp.type = 'image/webp';
+  const ndSource = document.createElement('source');
+  ndSource.dataset.srcset = `${DBHelper.imageUrlForRestaurant(restaurant)}-medium_x1.jpg 1x, ${DBHelper.imageUrlForRestaurant(restaurant)}-medium_x2.jpg 2x`;
+  ndSource.srcset = 'assets/img/svg/puff.svg';
+  ndSource.className = 'lazy';
+  ndSource.media = ndSourceWebp.media;
+  ndSource.type = 'image/jpeg';
+  
+  const thSourceWebp = document.createElement('source');
+  thSourceWebp.dataset.srcset = `${DBHelper.imageWebpUrlForRestaurant(restaurant)}-small_x2.webp 2x, ${DBHelper.imageWebpUrlForRestaurant(restaurant)}-small_x1.webp 1x`;
+  thSourceWebp.srcset = 'assets/img/svg/puff.svg';
+  thSourceWebp.className = 'lazy';
+  thSourceWebp.media = '(min-width: 320px)';
+  thSourceWebp.type = 'image/webp';
+  const thSource = document.createElement('source');
+  thSource.dataset.srcset = `${DBHelper.imageUrlForRestaurant(restaurant)}-small_x2.jpg 2x, ${DBHelper.imageUrlForRestaurant(restaurant)}-small_x1.jpg 1x`;
+  thSource.srcset = 'assets/img/svg/puff.svg';
+  thSource.className = 'lazy';
+  thSource.media = thSourceWebp.media;
+  thSource.type = 'image/jpeg';
+  
+  const image = document.createElement('img');
+  image.className = 'restaurant-img lazy';
+  image.dataset.src = `${DBHelper.imageUrlForRestaurant(restaurant)}-large_x1.jpg`;
+  image.src = 'assets/img/svg/puff.svg';
+  image.setAttribute('sizes', '(max-width: 1100px) 85vw, (min-width: 1101px) 990px');
+  image.alt = `${restaurant.name}'s  restaurant`;
+  image.type = 'image/jpeg';
+
+  picture.appendChild(sourceWebp);
+  picture.appendChild(source);
+  picture.appendChild(ndSourceWebp);
+  picture.appendChild(ndSource);
+  picture.appendChild(thSourceWebp);
+  picture.appendChild(thSource);
+  picture.appendChild(image);
+  figure.insertBefore(picture, figcaption);
+
+  const cuisine = document.getElementById('restaurant-cuisine');
+  cuisine.innerHTML = restaurant.cuisine_type;
+
+  const labelFoodType = document.createElement('label');
+  labelFoodType.innerHTML = `${restaurant.cuisine_type} food`;
+  labelFoodType.setAttribute('hidden', 'hidden');
+  labelFoodType.id = 'foodType';
+
+  cuisine.parentNode.insertBefore(labelFoodType, cuisine.nextSibling);
+
+  // fill operating hours
+  if (restaurant.operating_hours) {
+    fillRestaurantHoursHTML();
+  }
+  // fill reviews
+  fillReviewsHTML();
+  return restaurant;
+};
+
+/**
+ * Create restaurant operating hours HTML table and add it to the webpage.
+ */
+const fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => {
+  const hours = document.getElementById('restaurant-hours');
+  for (let key in operatingHours) {
+    const row = document.createElement('tr');
+
+    const day = document.createElement('td');
+    day.innerHTML = key;
+    day.setAttribute('aria-label', `open on ${key}`);
+    row.appendChild(day);
+
+    const time = document.createElement('td');
+    time.innerHTML = operatingHours[key];
+    time.setAttribute('aria-label', `${operatingHours[key]},`);
+    row.appendChild(time);
+    row.setAttribute('role', 'row');
+    hours.appendChild(row);
+  }
+};
+
+
+/**
+ * Create all reviews HTML and add them to the webpage.
+ */
+const fillReviewsHTML = (reviews = self.restaurant.reviews || self.reviews) => {
+  const container = document.getElementById('reviews-container');
+  if (!reviews) {
+    const noReviews = document.createElement('p');
+    noReviews.innerHTML = 'No reviews yet!';
+    return container.appendChild(noReviews);
+  }
+  reviews = reviews.filter(review => review.restaurant_id === self.restaurant.id)
+  self.reviews = reviews;
+  const titleContainer = document.createElement('div');
+  const title = document.createElement('h3');
+  const addReview = document.createElement('button');
+  const addContent = document.createElement('span');
+  const deleteContent = document.createElement('span');
+
+  title.innerHTML = 'Reviews';
+  addContent.innerHTML = "+";
+  deleteContent.innerHTML = "-";
+  deleteContent.className = "toggled";
+  titleContainer.id = "title-container";
+
+  addReview.addEventListener('click', showForm);
+  addReview.appendChild(addContent);
+  addReview.appendChild(deleteContent);
+
+  titleContainer.appendChild(title);
+  titleContainer.appendChild(addReview);
+
+  container.appendChild(titleContainer);
+
+  const ul = document.getElementById('reviews-list');
+  reviews.forEach(review => {
+    ul.appendChild(createReviewHTML(review));
+  });
+  container.appendChild(ul);
+};
+
+const showForm = () => {
+
+  const form = document.createElement('form');
+  const labelNameInput = document.createElement('label');
+  const nameInput = document.createElement('input');
+  const ratingFieldset = document.createElement('fieldset');
+  const appreciation = ['excellent', 'good', 'ok', 'bad', 'awful'];
+  
+  form.autocomplete = 'on';
+
+  nameInput.id = 'form-name';
+  nameInput.type = 'text';
+  nameInput.name = 'name';
+  nameInput.placeholder = 'Your name';
+  nameInput.minLength = '2';
+  nameInput.maxLength = '50';
+  nameInput.pattern = '^[a-zA-Z\s]+$';
+  nameInput.required = true;
+
+  labelNameInput.setAttribute('for', nameInput.id);
+  labelNameInput.className = "visuallyHidden";
+  labelNameInput.innerHTML = "Enter your name";
+  
+  ratingFieldset.className = 'new-rating';
+
+  for (let i = 5; i > 0; i--){
+
+    const starInput = document.createElement('input');
+    const starLabel = document.createElement('label');
+    
+    starInput.type = 'radio';
+    starInput.id = `star${i}`;
+    starInput.name = 'rating';
+    starInput.value = i;
+    starInput.class = 'visuallyHidden';
+    starInput.required = true;
+    starInput.addEventListener('input', Launch.isFormValid);
+    
+    starLabel.setAttribute('for', `star${i}`);
+    starLabel.title = 'It was', appreciation[i - 1];
+    
+
+    ratingFieldset.appendChild(starInput);
+    ratingFieldset.appendChild(starLabel);
+  }
+  
+  const labelCommentsInput = document.createElement('label');
+  const commentsInput = document.createElement('textarea');
+  const labelSubmitButton = document.createElement('label');
+  const submitButton = document.createElement('input');
+
+  commentsInput.id = 'form-comment';
+  commentsInput.name = 'comments';
+  commentsInput.type = 'text';
+  commentsInput.required = true;
+  commentsInput.minLength = 3;
+  commentsInput.maxLength = 5000;
+  commentsInput.placeholder = 'Your comment';
+  commentsInput.addEventListener('keydown', autosize);
+
+  
+  labelCommentsInput.setAttribute('for', commentsInput.id);
+  labelCommentsInput.className = 'visuallyHidden';
+  labelCommentsInput.innerHTML = 'Enter your opinion about this restaurant';
+
+  submitButton.id = 'form-submit';
+  submitButton.type = 'submit';
+  submitButton.value = 'Save';
+
+  labelSubmitButton.setAttribute('for', submitButton.id);
+  labelSubmitButton.className = 'visuallyHidden';
+
+  nameInput.addEventListener('change', Launch.isFormValid);
+  commentsInput.addEventListener('input', Launch.isFormValid);
+
+  form.appendChild(labelNameInput);
+  form.appendChild(nameInput);
+  form.appendChild(ratingFieldset);
+  form.appendChild(labelCommentsInput);
+  form.appendChild(commentsInput);
+  form.appendChild(submitButton);
+  form.appendChild(labelSubmitButton);
+
+  form.addEventListener('submit', DBHelper.postReview);
+
+  document.getElementById('title-container').classList.toggle('form-open');
+  document.getElementById('title-container').appendChild(form);
+  form.classList.toggle('form-toggled');
+  setTimeout(() => {
+  }, 300)
+  document.querySelector('#title-container button').removeEventListener('click', showForm);
+  document.querySelector('#title-container button').addEventListener('click', hideForm);
+  document.querySelectorAll('#title-container button span').forEach(span => span.classList.toggle('toggled'))
+}
+
+const hideForm = () => {
+  document.querySelector('#title-container form').classList.toggle('form-toggled');
+  document.getElementById('title-container').classList.toggle('form-open');
+  setTimeout(() => {
+    document.querySelector('#title-container form').remove();
+  }, 300)
+  document.querySelectorAll('#title-container button span').forEach(span => span.classList.toggle('toggled'))
+  document.querySelector('#title-container button').removeEventListener('click', hideForm);
+  document.querySelector('#title-container button').addEventListener('click', showForm);
+}
+/**
+ * Create review HTML and add it to the webpage.
+ */
+const createReviewHTML = (review) => {
+
+  const li = document.createElement('li');
+  const name = document.createElement('p');
+  name.className = 'userName';
+  name.innerHTML = review.name;
+  name.setAttribute('aria-label', `${review.name},`);
+  li.appendChild(name);
+
+  const date = document.createElement('p');
+  date.className = 'dateReview';
+  const convertDate = new Date(review.updatedAt);
+  date.innerHTML = convertDate.toDateString();
+  date.setAttribute('aria-label', `${date.innerHTML},`);
+  li.appendChild(date);
+
+  const rating = document.createElement('p');
+  let stars = document.createElement('span');
+  rating.className = 'userRating';
+  stars.className = 'ratingStars';
+  for (let i = 0; i < review.rating; i++) {
+    const star = document.createElement('span');
+    star.innerHTML += '★';
+    star.id = `star${i + 1}`
+    stars.appendChild(star);
+  }
+  stars.setAttribute('aria-label', `${review.rating} stars on 5,`);
+  rating.innerHTML = 'Rating: ';
+  rating.appendChild(stars);
+  li.appendChild(rating);
+
+  const comments = document.createElement('p');
+  comments.className = 'userComments';
+  comments.innerHTML = review.comments;
+  li.appendChild(comments);
+
+  li.setAttribute('role', 'listitem');
+  li.setAttribute('aria-setsize', self.reviews);
+  li.setAttribute('aria-posinset', self.reviews.indexOf(review)+1);
+  return li;
+};
+
+/**
+ * Add restaurant name to the breadcrumb navigation menu
+ */
+const fillBreadcrumb = (restaurant = self.restaurant) => {
+  const breadcrumb = document.getElementById('breadcrumb');
+  const li = document.createElement('li');
+  li.innerHTML = ` ${restaurant.name}`;
+  li.className = 'fontawesome-arrow-right';
+  li.setAttribute('aria-current', 'page');
+  breadcrumb.appendChild(li);
+  Launch.fixedOnViewport(document.querySelector('nav'), document.querySelector('#breadcrumb'));
+};
+
+/**
+ * Get a parameter by name from page URL.
+ */
+const getParameterByName = (name, url) => {
+  if (!url)
+    url = window.location.href;
+  name = name.replace(/[\[\]]/g, '\\$&');
+  const regex = new RegExp(`[?&]${name}(=([^&#]*)|&|#|$)`),
+    results = regex.exec(url);
+  if (!results)
+    return null;
+  if (!results[2])
+    return '';
+  return decodeURIComponent(results[2].replace(/\+/g, ' '));
+};
+
+
+function autosize() {
+  const el = this;
+  document.getElementById('title-container').style.height = 'auto';
+  el.style.cssText = 'height:auto; padding:0';
+  el.style.cssText = 'height:' + el.scrollHeight + 'px';
+}
+},{"./dbhelper":1,"./helpers":2}],5:[function(require,module,exports){
+'use strict';
+
+(function() {
+  function toArray(arr) {
+    return Array.prototype.slice.call(arr);
+  }
+
+  function promisifyRequest(request) {
+    return new Promise(function(resolve, reject) {
+      request.onsuccess = function() {
+        resolve(request.result);
+      };
+
+      request.onerror = function() {
+        reject(request.error);
+      };
+    });
+  }
+
+  function promisifyRequestCall(obj, method, args) {
+    var request;
+    var p = new Promise(function(resolve, reject) {
+      request = obj[method].apply(obj, args);
+      promisifyRequest(request).then(resolve, reject);
+    });
+
+    p.request = request;
+    return p;
+  }
+
+  function promisifyCursorRequestCall(obj, method, args) {
+    var p = promisifyRequestCall(obj, method, args);
+    return p.then(function(value) {
+      if (!value) return;
+      return new Cursor(value, p.request);
+    });
+  }
+
+  function proxyProperties(ProxyClass, targetProp, properties) {
+    properties.forEach(function(prop) {
+      Object.defineProperty(ProxyClass.prototype, prop, {
+        get: function() {
+          return this[targetProp][prop];
+        },
+        set: function(val) {
+          this[targetProp][prop] = val;
+        }
+      });
+    });
+  }
+
+  function proxyRequestMethods(ProxyClass, targetProp, Constructor, properties) {
+    properties.forEach(function(prop) {
+      if (!(prop in Constructor.prototype)) return;
+      ProxyClass.prototype[prop] = function() {
+        return promisifyRequestCall(this[targetProp], prop, arguments);
+      };
+    });
+  }
+
+  function proxyMethods(ProxyClass, targetProp, Constructor, properties) {
+    properties.forEach(function(prop) {
+      if (!(prop in Constructor.prototype)) return;
+      ProxyClass.prototype[prop] = function() {
+        return this[targetProp][prop].apply(this[targetProp], arguments);
+      };
+    });
+  }
+
+  function proxyCursorRequestMethods(ProxyClass, targetProp, Constructor, properties) {
+    properties.forEach(function(prop) {
+      if (!(prop in Constructor.prototype)) return;
+      ProxyClass.prototype[prop] = function() {
+        return promisifyCursorRequestCall(this[targetProp], prop, arguments);
+      };
+    });
+  }
+
+  function Index(index) {
+    this._index = index;
+  }
+
+  proxyProperties(Index, '_index', [
+    'name',
+    'keyPath',
+    'multiEntry',
+    'unique'
+  ]);
+
+  proxyRequestMethods(Index, '_index', IDBIndex, [
+    'get',
+    'getKey',
+    'getAll',
+    'getAllKeys',
+    'count'
+  ]);
+
+  proxyCursorRequestMethods(Index, '_index', IDBIndex, [
+    'openCursor',
+    'openKeyCursor'
+  ]);
+
+  function Cursor(cursor, request) {
+    this._cursor = cursor;
+    this._request = request;
+  }
+
+  proxyProperties(Cursor, '_cursor', [
+    'direction',
+    'key',
+    'primaryKey',
+    'value'
+  ]);
+
+  proxyRequestMethods(Cursor, '_cursor', IDBCursor, [
+    'update',
+    'delete'
+  ]);
+
+  // proxy 'next' methods
+  ['advance', 'continue', 'continuePrimaryKey'].forEach(function(methodName) {
+    if (!(methodName in IDBCursor.prototype)) return;
+    Cursor.prototype[methodName] = function() {
+      var cursor = this;
+      var args = arguments;
+      return Promise.resolve().then(function() {
+        cursor._cursor[methodName].apply(cursor._cursor, args);
+        return promisifyRequest(cursor._request).then(function(value) {
+          if (!value) return;
+          return new Cursor(value, cursor._request);
+        });
+      });
+    };
+  });
+
+  function ObjectStore(store) {
+    this._store = store;
+  }
+
+  ObjectStore.prototype.createIndex = function() {
+    return new Index(this._store.createIndex.apply(this._store, arguments));
+  };
+
+  ObjectStore.prototype.index = function() {
+    return new Index(this._store.index.apply(this._store, arguments));
+  };
+
+  proxyProperties(ObjectStore, '_store', [
+    'name',
+    'keyPath',
+    'indexNames',
+    'autoIncrement'
+  ]);
+
+  proxyRequestMethods(ObjectStore, '_store', IDBObjectStore, [
+    'put',
+    'add',
+    'delete',
+    'clear',
+    'get',
+    'getAll',
+    'getKey',
+    'getAllKeys',
+    'count'
+  ]);
+
+  proxyCursorRequestMethods(ObjectStore, '_store', IDBObjectStore, [
+    'openCursor',
+    'openKeyCursor'
+  ]);
+
+  proxyMethods(ObjectStore, '_store', IDBObjectStore, [
+    'deleteIndex'
+  ]);
+
+  function Transaction(idbTransaction) {
+    this._tx = idbTransaction;
+    this.complete = new Promise(function(resolve, reject) {
+      idbTransaction.oncomplete = function() {
+        resolve();
+      };
+      idbTransaction.onerror = function() {
+        reject(idbTransaction.error);
+      };
+      idbTransaction.onabort = function() {
+        reject(idbTransaction.error);
+      };
+    });
+  }
+
+  Transaction.prototype.objectStore = function() {
+    return new ObjectStore(this._tx.objectStore.apply(this._tx, arguments));
+  };
+
+  proxyProperties(Transaction, '_tx', [
+    'objectStoreNames',
+    'mode'
+  ]);
+
+  proxyMethods(Transaction, '_tx', IDBTransaction, [
+    'abort'
+  ]);
+
+  function UpgradeDB(db, oldVersion, transaction) {
+    this._db = db;
+    this.oldVersion = oldVersion;
+    this.transaction = new Transaction(transaction);
+  }
+
+  UpgradeDB.prototype.createObjectStore = function() {
+    return new ObjectStore(this._db.createObjectStore.apply(this._db, arguments));
+  };
+
+  proxyProperties(UpgradeDB, '_db', [
+    'name',
+    'version',
+    'objectStoreNames'
+  ]);
+
+  proxyMethods(UpgradeDB, '_db', IDBDatabase, [
+    'deleteObjectStore',
+    'close'
+  ]);
+
+  function DB(db) {
+    this._db = db;
+  }
+
+  DB.prototype.transaction = function() {
+    return new Transaction(this._db.transaction.apply(this._db, arguments));
+  };
+
+  proxyProperties(DB, '_db', [
+    'name',
+    'version',
+    'objectStoreNames'
+  ]);
+
+  proxyMethods(DB, '_db', IDBDatabase, [
+    'close'
+  ]);
+
+  // Add cursor iterators
+  // TODO: remove this once browsers do the right thing with promises
+  ['openCursor', 'openKeyCursor'].forEach(function(funcName) {
+    [ObjectStore, Index].forEach(function(Constructor) {
+      // Don't create iterateKeyCursor if openKeyCursor doesn't exist.
+      if (!(funcName in Constructor.prototype)) return;
+
+      Constructor.prototype[funcName.replace('open', 'iterate')] = function() {
+        var args = toArray(arguments);
+        var callback = args[args.length - 1];
+        var nativeObject = this._store || this._index;
+        var request = nativeObject[funcName].apply(nativeObject, args.slice(0, -1));
+        request.onsuccess = function() {
+          callback(request.result);
+        };
+      };
+    });
+  });
+
+  // polyfill getAll
+  [Index, ObjectStore].forEach(function(Constructor) {
+    if (Constructor.prototype.getAll) return;
+    Constructor.prototype.getAll = function(query, count) {
+      var instance = this;
+      var items = [];
+
+      return new Promise(function(resolve) {
+        instance.iterateCursor(query, function(cursor) {
+          if (!cursor) {
+            resolve(items);
+            return;
+          }
+          items.push(cursor.value);
+
+          if (count !== undefined && items.length == count) {
+            resolve(items);
+            return;
+          }
+          cursor.continue();
+        });
+      });
+    };
+  });
+
+  var exp = {
+    open: function(name, version, upgradeCallback) {
+      var p = promisifyRequestCall(indexedDB, 'open', [name, version]);
+      var request = p.request;
+
+      if (request) {
+        request.onupgradeneeded = function(event) {
+          if (upgradeCallback) {
+            upgradeCallback(new UpgradeDB(request.result, event.oldVersion, request.transaction));
+          }
+        };
+      }
+
+      return p.then(function(db) {
+        return new DB(db);
+      });
+    },
+    delete: function(name) {
+      return promisifyRequestCall(indexedDB, 'deleteDatabase', [name]);
+    }
+  };
+
+  if (typeof module !== 'undefined') {
+    module.exports = exp;
+    module.exports.default = module.exports;
+  }
+  else {
+    self.idb = exp;
+  }
+}());
+
+},{}]},{},[4]);

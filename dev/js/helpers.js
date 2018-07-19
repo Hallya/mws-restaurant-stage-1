@@ -29,10 +29,8 @@ const launch = {
             clonedTarget.classList.remove('exclude');
             clonedTarget.classList.add('shadow');
             target.classList.add('shadow');
-            // target.classList.add('fixed');
           } else {
             if (target.classList.contains('shadow')){ target.classList.remove('shadow');}
-            // if (target.classList.contains('fixed')) { target.classList.remove('fixed'); }
             clonedTarget.classList.remove('shadow');
             clonedTarget.classList.add('exclude');
           }
@@ -77,16 +75,15 @@ const launch = {
       for (let i = 0.00; i <= 1; i += 0.01){
         options.threshold.push(Math.round(i*100)/100);
       }
-      let lazyImageObserver = new IntersectionObserver(function (entries, observer) {
+      let lazyImageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(function (entry) {
+          const lazyImage = entry.target;
           if (entry.isIntersecting || entry.intersectionRatio >= .01) {
-            let lazyImage = entry.target;
             if (lazyImage.localName === 'source') {
               lazyImage.srcset = lazyImage.dataset.srcset;
             } else {
               lazyImage.src = lazyImage.dataset.src;
             }
-
             lazyImage.classList.remove('lazy');
             lazyImageObserver.unobserve(lazyImage);
           }
@@ -101,7 +98,7 @@ const launch = {
         }
       }
     } else {
-      // Possibly fall back to a more compatible method here
+      // Possible fallback to a more compatible method here
       let lazyImages = [].slice.call(document.querySelectorAll('.lazy'));
 
       let active = false;
@@ -170,14 +167,22 @@ const launch = {
   getAverageNote: (id, reviews = self.reviews) => {
     let totalRatings = 0;
     let totalReviews = 0;
-    reviews.forEach(review => {
+    reviews && reviews.forEach(review => {
       if (review.restaurant_id === id) {
         totalRatings += Number(review.rating);
         totalReviews++;
       }
     });
     totalRatings = totalRatings / totalReviews;
-    return (Math.round(totalRatings * 10)) / 10;
+    return totalRatings && `${(Math.round(totalRatings * 10)) / 10}/5` || 'N/A';
+  },
+  switchToDefaultImage: (event, observer) => {
+    observer.unobserve(event.target);
+    if (event.target.localName === 'source') {
+      return event.target.srcset = 'assets/img/svg/no-wifi.svg';
+    } else {
+      return event.target.src = 'assets/img/svg/no-wifi.svg';
+    }
   }
 };
 module.exports = launch;

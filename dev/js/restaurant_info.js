@@ -30,11 +30,14 @@ window.initMap = () => {
       self.map = new google.maps.Map(mapPlaceHolder, {
         zoom: 16,
         center: {
-          lat: restaurant.lat || restaurant.latlng.lat,
-          lng: restaurant.lng || restaurant.latlng.lng
+          lat: restaurant.latlng.lat,
+          lng: restaurant.latlng.lng
         },
-        streetViewControl: true,
-        mapTypeId: 'roadmap'
+        streetViewControl: false,
+        zoomControl: true,
+        fullscreenControl: true,
+        mapTypeId: 'roadmap',
+        mapTypeControl: false,
       })
       document.getElementById('map-container').appendChild(mapPlaceHolder);
       self.map.addListener('tilesloaded', function () {
@@ -62,7 +65,7 @@ const fetchRestaurantFromURL = () => {
   return Promise.all([DBHelper.fetchRestaurantById(id), DBHelper.fetchRestaurantReviews(id)])
     .then(results => {
 
-      self.reviews = results[1].reverse();
+      self.reviews = results[1] && results[1].reverse();
       return self.restaurant = results[0];
     })
     .then(fillRestaurantHTML)
@@ -187,6 +190,7 @@ const fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hour
  * Create all reviews HTML and add them to the webpage.
  */
 const fillReviewsHTML = (reviews = self.restaurant.reviews || self.reviews) => {
+  const container = document.getElementById('reviews-container');
   if (!reviews) {
     const noReviews = document.createElement('p');
     noReviews.innerHTML = 'No reviews yet!';
@@ -194,7 +198,6 @@ const fillReviewsHTML = (reviews = self.restaurant.reviews || self.reviews) => {
   }
   reviews = reviews.filter(review => review.restaurant_id === self.restaurant.id)
   self.reviews = reviews;
-  const container = document.getElementById('reviews-container');
   const titleContainer = document.createElement('div');
   const title = document.createElement('h3');
   const addReview = document.createElement('button');

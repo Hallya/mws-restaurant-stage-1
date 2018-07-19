@@ -8,12 +8,12 @@ const scheme = 'http://',
     reviews: '/reviews/'
   },
   query = {
-    is_favorite: '?is_favorite=',
+    is_favorite: '/?is_favorite=',
     restaurant_id: '?restaurant_id='
   },
 
   baseURI = scheme + host + port;
-console.log(baseURI + path.reviews + query.restaurant_id + 2);
+  
 const DBHelper = {
 
   DATABASE_URL:{
@@ -21,8 +21,7 @@ const DBHelper = {
       allRestaurants: () => fetch(baseURI + path.restaurants),
       allReviews: () => fetch(baseURI + path.reviews),
       restaurant: (id) => fetch(baseURI + path.restaurants + id ),
-      restaurantReviews: (id) => fetch(baseURI + path.reviews + query.restaurant_id + id),
-      setFavoriteRestaurants: (answer) => fetch(baseURI + path.restaurants + query.is_favorite + answer)
+      restaurantReviews: (id) => fetch(baseURI + path.reviews + query.restaurant_id + id)
     },
     POST: {
       newReview: (body) => fetch(baseURI + path.reviews, {
@@ -62,7 +61,10 @@ const DBHelper = {
           return restaurants.restaurants || restaurants;
         })
         .then(restaurants => {
-          restaurants.forEach(restaurant => idbKey.set(store, restaurant));
+          restaurants.forEach(restaurant => {
+            restaurant.is_favorite = restaurant.is_favorite.toString();
+            idbKey.set(store, restaurant);
+          });
           return restaurants;
         })
         .catch(error => console.error(`Request failed. Returned status of ${error}`));
@@ -78,7 +80,7 @@ const DBHelper = {
    */
   fetchReviews: () => {
     const store = 'reviews';
-    return idbKey.getAll(store).then(reviews => reviews.reverse())
+    return idbKey.getAll(store)
     .then(reviews => {
       if (reviews.length < 10) {
         return DBHelper.DATABASE_URL.GET.allReviews()
@@ -101,9 +103,8 @@ const DBHelper = {
    */
   fetchRestaurantReviews: (id) => {
     const store = 'reviews';
-    return idbKey.getAll(store)
-    .then(reviews => {
-      if (reviews.filter(review => review.restaurant_id === id).length < 10) {
+    return idbKey.getAll(store).then(reviews => {
+      if (!reviews.length) {
         return DBHelper.DATABASE_URL.GET.restaurantReviews(id)
         .then(response => response.json())
         .then(reviews => {
@@ -137,6 +138,7 @@ const DBHelper = {
           return DBHelper.DATABASE_URL.GET.restaurant(id)
             .then(response => response.json())
             .then(restaurant => {
+              restaurant.is_favorite = restaurant.is_favorite.toString();
               idbKey.set(store, restaurant);
               return restaurant;
             })
@@ -227,10 +229,10 @@ const DBHelper = {
       name: form["name"].value,
       rating: Number(form["rating"].value),
       comments: form["comments"].value,
-      // createdAt: Date.now(),
-      // updatedAt: Date.now()
     }
     await idbKey.set('posts', body);
+    body.createdAt = Date.now(),
+    body.updatedAt = Date.now();
     await idbKey.addReview('reviews', body);
     const registration = await navigator.serviceWorker.ready
     Notification.requestPermission()
@@ -247,9 +249,17 @@ const DBHelper = {
           console.log('Notification allowed')
         }
       });
-    registration.sync.register('post-review');
+    await registration.sync.register('post-review');
     location.reload();
-    registration.sync.getTags().then(res => console.log(res));
+  },
+
+  setFavorite: async (target, restaurant) => {
+    target.classList.toggle('hidden');
+    const favorite = restaurant.is_favorite === 'true'? 'false' : 'true';
+    const store = 'restaurants';
+    restaurant.is_favorite = favorite;
+    await idbKey.set(store, restaurant);
+    return await DBHelper.DATABASE_URL.PUT.favoriteRestaurant(restaurant.id, favorite);
   },
   /**
    * Map marker for a restaurant.

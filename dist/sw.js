@@ -1,1 +1,868 @@
-!function(){return function e(t,n,r){function o(a,i){if(!n[a]){if(!t[a]){var c="function"==typeof require&&require;if(!i&&c)return c(a,!0);if(s)return s(a,!0);var l=new Error("Cannot find module '"+a+"'");throw l.code="MODULE_NOT_FOUND",l}var u=n[a]={exports:{}};t[a][0].call(u.exports,function(e){return o(t[a][1][e]||e)},u,u.exports,e,t,n,r)}return n[a].exports}for(var s="function"==typeof require&&require,a=0;a<r.length;a++)o(r[a]);return o}}()({1:[function(e,t,n){const r=e("./indexedb"),o="/restaurants/",s="/reviews/",a="?is_favorite=",i="?restaurant_id=",c="http://localhost:1337";console.log(c+s+i+2);const l={DATABASE_URL:{GET:{allRestaurants:()=>fetch(c+o),allReviews:()=>fetch(c+s),restaurant:e=>fetch(c+o+e),restaurantReviews:e=>fetch(c+s+i+e),setFavoriteRestaurants:e=>fetch(c+o+a+e)},POST:{newReview:e=>fetch(c+s,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(e)})},PUT:{favoriteRestaurant:(e,t)=>fetch(c+o+e+a+t,{method:"PUT"}),updateReview:e=>fetch(c+s+e,{method:"PUT"})},DELETE:{review:e=>fetch(c+s+e,{method:"DELETE"})}},fetchRestaurants:()=>{return r.getAll("restaurants").then(e=>e.length<10?l.DATABASE_URL.GET.allRestaurants().then(e=>e.json()).then(e=>(console.log("- Restaurants data fetched !"),e.restaurants||e)).then(e=>(e.forEach(e=>r.set("restaurants",e)),e)).catch(e=>console.error(`Request failed. Returned status of ${e}`)):e).catch(e=>{console.error(e)})},fetchReviews:()=>{return r.getAll("reviews").then(e=>e.reverse()).then(e=>e.length<10?l.DATABASE_URL.GET.allReviews().then(e=>e.json()).then(e=>(console.log("- Reviews data fetched !"),e.reviews||e)).catch(e=>console.error(`Request failed. Returned status of ${e}`)):e).catch(e=>{console.error(e)})},fetchRestaurantReviews:e=>{return r.getAll("reviews").then(t=>t.filter(t=>t.restaurant_id===e).length<10?l.DATABASE_URL.GET.restaurantReviews(e).then(e=>e.json()).then(e=>(console.log("- Restaurant reviews fetched !"),e.reviews||e)).then(e=>(e.forEach(e=>r.set("reviews",e)),e)).catch(e=>console.error(`Request failed. Returned status of ${e}`)):t).catch(e=>{console.error(e)})},fetchRestaurantById:e=>{return r.get("restaurants",Number(e)).then(t=>t||(console.log("- No restaurant cached"),l.DATABASE_URL.GET.restaurant(e).then(e=>e.json()).then(e=>(r.set("restaurants",e),e)).catch(e=>console.error(`Restaurant does not exist: ${e}`))))},fetchRestaurantByCuisineAndNeighborhood:(e,t)=>{return r.getAll("restaurants").then(n=>n.length<10?l.fetchRestaurants().then(n=>{const o=n;return o.forEach(e=>r.set("restaurants",e)),l.filterResults(o,e,t)}).catch(e=>console.error(e)):l.filterResults(n,e,t)).catch(e=>console.error(e))},filterResults:(e,t,n)=>("all"!==t&&(e=e.filter(e=>e.cuisine_type==t)),"all"!==n&&(e=e.filter(e=>e.neighborhood==n)),e),addNeighborhoodsOptions:e=>{const t=e.map(e=>e.neighborhood);return t.filter((e,n)=>t.indexOf(e)==n)},addCuisinesOptions:e=>{const t=e.map(e=>e.cuisine_type);return t.filter((e,n)=>t.indexOf(e)==n)},urlForRestaurant:e=>`restaurant.html?id=${e.id}`,imageUrlForRestaurant:e=>`assets/img/jpg/${e.photograph}`,imageWebpUrlForRestaurant:e=>`assets/img/webp/${e.photograph}`,postReview:async e=>{console.log("Trying to post review..."),e.preventDefault();const t=document.querySelector("#title-container form").elements,n={restaurant_id:Number(window.location.search.match(/\d+/)[0]),name:t.name.value,rating:Number(t.rating.value),comments:t.comments.value};await r.set("posts",n),await r.addReview("reviews",n);const o=await navigator.serviceWorker.ready;Notification.requestPermission().then(function(e){"denied"!==e?"default"!==e?"granted"===e&&console.log("Notification allowed"):console.log("The permission request was dismissed."):console.log("Permission wasn't granted. Allow a retry.")}),o.sync.register("post-review"),location.reload(),o.sync.getTags().then(e=>console.log(e))},mapMarkerForRestaurant:(e,t)=>{return new google.maps.Marker({position:{lat:e.lat||e.latlng.lat,lng:e.lng||e.latlng.lng},title:e.name,url:l.urlForRestaurant(e),map:t,animation:google.maps.Animation.DROP,icon:"assets/img/svg/marker.svg"})}};t.exports=l},{"./indexedb":2}],2:[function(e,t,n){const r=e("../../node_modules/idb/lib/idb"),o=()=>r.open("restaurant-reviews",3,e=>{switch(e.oldVersion){case 0:e.createObjectStore("restaurants",{keyPath:"id"});case 1:e.createObjectStore("reviews",{keyPath:"id",autoIncrement:!0});case 1:e.createObjectStore("posts",{keyPath:"restaurant_id"})}}),s={get:(e,t)=>o().then(n=>{if(n)return n.transaction(e).objectStore(e).get(t)}).catch(e=>console.error(e)),set:(e,t)=>o().then(n=>{if(!n)return;return n.transaction(e,"readwrite").objectStore(e).put(t).complete}).catch(e=>console.error(e)),getAll:e=>o().then(t=>{if(t)return t.transaction(e).objectStore(e).getAll()}).catch(e=>console.error(e)),delete:(e,t)=>o().then(n=>{if(n)return n.transaction(e,"readwrite").objectStore(e).delete(t)}).catch(e=>console.error(e)),addReview:(e,t)=>o().then(n=>{if(n)return n.transaction(e,"readwrite").objectStore(e).add(t)}).catch(e=>console.error(e)),getRestaurantReviews:(e,t)=>o().then(n=>{if(n)return n.transaction(e).objectStore(e).getAll().then(e=>e.filter(e=>e.restaurant_id===t))}).catch(e=>console.error(e))};t.exports=s},{"../../node_modules/idb/lib/idb":4}],3:[function(e,t,n){(function(t){const n="object"==typeof self&&self.self===self&&self||"object"==typeof t&&t.global===t&&t||this,r=e("./js/indexedb"),o=e("./js/dbhelper"),s={CACHE_STATIC:"static-cache-3",CACHE_MAP:"map-api-3",CACHE_FONT:"google-fonts-3"},a=["index.html","manifest.webmanifest","restaurant.html","assets/css/fonts/iconicfill.woff2","assets/css/fonts/fontawesome.woff2","assets/img/svg/puff.svg","assets/img/png/launchScreen-ipad-9.7.png","assets/img/png/launchScreen-ipadpro-10.5.png","assets/img/png/launchScreen-ipadpro-12.9.png","assets/img/png/launchScreen-iphone-8.png","assets/img/png/launchScreen-iphone-8plus.png","assets/img/png/launchScreen-iphone-x.png","assets/img/png/launchScreen-iphone-se.png","assets/img/png/logo-64.png","assets/img/png/logo-128.png","assets/img/png/logo-256.png","assets/img/png/logo-512.png","assets/css/index.css","assets/css/restaurant_info.css","js/main.js","js/restaurant_info.js"];function i(e,t){return caches.open(e).then(e=>e.match(t).then(e=>e||fetch(t)).then(n=>(e.put(t,n.clone()),n),e=>console.error("Error :",e)),e=>console.error("Error: ",e))}self.addEventListener("install",e=>{console.log(`SW - Cache version : "${s.CACHE_STATIC}"`),e.waitUntil(caches.open(s.CACHE_STATIC).then(e=>e.addAll(a)).then(()=>{console.log("SW - All resources cached."),self.skipWaiting(),console.log("SW - SW version skipped.")}).catch(e=>console.error("SW - Open cache failed :",e)))}),self.addEventListener("activate",e=>{const t=Object.keys(s).map(e=>s[e]);e.waitUntil(caches.keys().then(e=>Promise.all(e.map(e=>{if(-1==t.indexOf(e))return console.log("SW - Deleting",e),caches.delete(e)}))).then(()=>console.log(`SW - "${s.CACHE_STATIC}" now ready to handle fetches!`)))}),self.addEventListener("fetch",e=>{const t=new URL(e.request.url),r=n.location;switch(t.hostname){case"maps.gstatic.com":e.respondWith(i(s.CACHE_MAP,e.request));break;case"fonts.gstatic.com":e.respondWith(i(s.CACHE_FONT,e.request));break;case r.hostname:if(t.pathname.startsWith("/restaurant.html")){const n=t.href.replace(/[?&]id=\d{1,}/,"");e.respondWith(i(s.CACHE_STATIC,n))}else t.pathname.endsWith("restaurants.json")?e.respondWith(fetch(e.request)):"POST"!==e.request.method?e.respondWith(i(s.CACHE_STATIC,e.request)):e.respondWith(fetch(e.request));break;default:e.respondWith(fetch(e.request))}});self.addEventListener("sync",function(e){"post-review"===e.tag&&e.waitUntil(async function(){const e=await r.getAll("posts").catch(e=>console.error(e));await Promise.all(e.map(e=>o.DATABASE_URL.POST.newReview(e).then(t=>(console.log("Response after post request",t,"\nStatus :",t.status),201===t.status&&self.registration.showNotification("Review synchronised to server").then(()=>r.delete("posts",e.restaurant_id)),t)).catch(e=>{self.registration.showNotification("Your review will be posted later"),self.registration.showNotification("You can quit this app if needed"),console.error("Review not posted",e)})))}()),e.lastChance&&console.log("Last time trying to sync"),"fetch-new-reviews"===e.tag&&e.waitUntil((async()=>{const e=await o.DATABASE_URL.GET.restaurantReviews(location.search.match(/\d+/)[0]);(await e.json()).forEach(e=>r.set("reviews",e))})())})}).call(this,"undefined"!=typeof global?global:"undefined"!=typeof self?self:"undefined"!=typeof window?window:{})},{"./js/dbhelper":1,"./js/indexedb":2}],4:[function(e,t,n){"use strict";!function(){function e(e){return new Promise(function(t,n){e.onsuccess=function(){t(e.result)},e.onerror=function(){n(e.error)}})}function n(t,n,r){var o,s=new Promise(function(s,a){e(o=t[n].apply(t,r)).then(s,a)});return s.request=o,s}function r(e,t,n){n.forEach(function(n){Object.defineProperty(e.prototype,n,{get:function(){return this[t][n]},set:function(e){this[t][n]=e}})})}function o(e,t,r,o){o.forEach(function(o){o in r.prototype&&(e.prototype[o]=function(){return n(this[t],o,arguments)})})}function s(e,t,n,r){r.forEach(function(r){r in n.prototype&&(e.prototype[r]=function(){return this[t][r].apply(this[t],arguments)})})}function a(e,t,r,o){o.forEach(function(o){o in r.prototype&&(e.prototype[o]=function(){return e=this[t],(r=n(e,o,arguments)).then(function(e){if(e)return new c(e,r.request)});var e,r})})}function i(e){this._index=e}function c(e,t){this._cursor=e,this._request=t}function l(e){this._store=e}function u(e){this._tx=e,this.complete=new Promise(function(t,n){e.oncomplete=function(){t()},e.onerror=function(){n(e.error)},e.onabort=function(){n(e.error)}})}function h(e,t,n){this._db=e,this.oldVersion=t,this.transaction=new u(n)}function f(e){this._db=e}r(i,"_index",["name","keyPath","multiEntry","unique"]),o(i,"_index",IDBIndex,["get","getKey","getAll","getAllKeys","count"]),a(i,"_index",IDBIndex,["openCursor","openKeyCursor"]),r(c,"_cursor",["direction","key","primaryKey","value"]),o(c,"_cursor",IDBCursor,["update","delete"]),["advance","continue","continuePrimaryKey"].forEach(function(t){t in IDBCursor.prototype&&(c.prototype[t]=function(){var n=this,r=arguments;return Promise.resolve().then(function(){return n._cursor[t].apply(n._cursor,r),e(n._request).then(function(e){if(e)return new c(e,n._request)})})})}),l.prototype.createIndex=function(){return new i(this._store.createIndex.apply(this._store,arguments))},l.prototype.index=function(){return new i(this._store.index.apply(this._store,arguments))},r(l,"_store",["name","keyPath","indexNames","autoIncrement"]),o(l,"_store",IDBObjectStore,["put","add","delete","clear","get","getAll","getKey","getAllKeys","count"]),a(l,"_store",IDBObjectStore,["openCursor","openKeyCursor"]),s(l,"_store",IDBObjectStore,["deleteIndex"]),u.prototype.objectStore=function(){return new l(this._tx.objectStore.apply(this._tx,arguments))},r(u,"_tx",["objectStoreNames","mode"]),s(u,"_tx",IDBTransaction,["abort"]),h.prototype.createObjectStore=function(){return new l(this._db.createObjectStore.apply(this._db,arguments))},r(h,"_db",["name","version","objectStoreNames"]),s(h,"_db",IDBDatabase,["deleteObjectStore","close"]),f.prototype.transaction=function(){return new u(this._db.transaction.apply(this._db,arguments))},r(f,"_db",["name","version","objectStoreNames"]),s(f,"_db",IDBDatabase,["close"]),["openCursor","openKeyCursor"].forEach(function(e){[l,i].forEach(function(t){e in t.prototype&&(t.prototype[e.replace("open","iterate")]=function(){var t,n=(t=arguments,Array.prototype.slice.call(t)),r=n[n.length-1],o=this._store||this._index,s=o[e].apply(o,n.slice(0,-1));s.onsuccess=function(){r(s.result)}})})}),[i,l].forEach(function(e){e.prototype.getAll||(e.prototype.getAll=function(e,t){var n=this,r=[];return new Promise(function(o){n.iterateCursor(e,function(e){e?(r.push(e.value),void 0===t||r.length!=t?e.continue():o(r)):o(r)})})})});var p={open:function(e,t,r){var o=n(indexedDB,"open",[e,t]),s=o.request;return s&&(s.onupgradeneeded=function(e){r&&r(new h(s.result,e.oldVersion,s.transaction))}),o.then(function(e){return new f(e)})},delete:function(e){return n(indexedDB,"deleteDatabase",[e])}};void 0!==t?(t.exports=p,t.exports.default=t.exports):self.idb=p}()},{}]},{},[3]);
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const idbKey = require('./indexedb');
+
+const scheme = 'http://',
+  host = 'localhost',
+  port = ':1337',
+  path = {
+    restaurants: '/restaurants/',
+    reviews: '/reviews/'
+  },
+  query = {
+    is_favorite: '/?is_favorite=',
+    restaurant_id: '?restaurant_id='
+  },
+
+  baseURI = scheme + host + port;
+  
+const DBHelper = {
+
+  DATABASE_URL:{
+    GET: {
+      allRestaurants: () => fetch(baseURI + path.restaurants),
+      allReviews: () => fetch(baseURI + path.reviews),
+      restaurant: (id) => fetch(baseURI + path.restaurants + id ),
+      restaurantReviews: (id) => fetch(baseURI + path.reviews + query.restaurant_id + id)
+    },
+    POST: {
+      newReview: (body) => fetch(baseURI + path.reviews, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      })
+    },
+    PUT: {
+      favoriteRestaurant: (id, answer) => fetch(baseURI + path.restaurants + id + query.is_favorite + answer, {
+        method: 'PUT'
+      }),
+      updateReview: (id) => fetch(baseURI + path.reviews + id, {
+        method: 'PUT'
+      })
+    },
+    DELETE: {
+      review: (id) => fetch(baseURI + path.reviews + id, {
+        method: 'DELETE'
+      })
+    }
+  },
+  /**
+   * Fetch all restaurants.
+   */
+  fetchRestaurants: () => {
+    const store = 'restaurants';
+    return idbKey.getAll(store)
+    .then(restaurants => {
+      if (restaurants.length < 10) {
+        return DBHelper.DATABASE_URL.GET.allRestaurants()
+        .then(response => response.json())
+        .then(restaurants => {
+          console.log('- Restaurants data fetched !');
+          return restaurants.restaurants || restaurants;
+        })
+        .then(restaurants => {
+          restaurants.forEach(restaurant => {
+            restaurant.is_favorite = restaurant.is_favorite.toString();
+            idbKey.set(store, restaurant);
+          });
+          return restaurants;
+        })
+        .catch(error => console.error(`Request failed. Returned status of ${error}`));
+      } else {
+        return restaurants;
+      }
+    }).catch(error => {
+      console.error(error)
+    });
+  },
+  /**
+   * Fetch all reviews.
+   */
+  fetchReviews: () => {
+    const store = 'reviews';
+    return idbKey.getAll(store)
+    .then(reviews => {
+      if (reviews.length < 10) {
+        return DBHelper.DATABASE_URL.GET.allReviews()
+        .then(response => response.json())
+        .then(reviews => {
+          console.log('- Reviews data fetched !');
+          return reviews.reviews || reviews;
+        })
+        .catch(error => console.error(`Request failed. Returned status of ${error}`));
+      } else {
+        return reviews;
+      }
+    }).catch(error => {
+      console.error(error)
+    });
+  },
+  
+  /**
+   * Fetch restaurant reviews.
+   */
+  fetchRestaurantReviews: (id) => {
+    const store = 'reviews';
+    return idbKey.getAll(store).then(reviews => {
+      if (!reviews.length) {
+        return DBHelper.DATABASE_URL.GET.restaurantReviews(id)
+        .then(response => response.json())
+        .then(reviews => {
+          console.log('- Restaurant reviews fetched !');
+          return reviews.reviews || reviews;
+        })
+        .then(reviews => {
+          reviews.forEach(review => idbKey.set(store, review));
+          return reviews;
+        })
+        .catch(error => console.error(`Request failed. Returned status of ${error}`));
+      } else {
+        return reviews;
+      }
+    }).catch(error => {
+      console.error(error)
+    });
+  },
+  
+  /**
+   * Fetch a restaurant by its ID.
+   */
+  fetchRestaurantById: (id) => {
+    // fetch all restaurants with proper error handling.
+    const store = 'restaurants';
+
+    return idbKey.get(store, Number(id))
+      .then((restaurant) => {
+        if (!restaurant) {
+          console.log('- No restaurant cached');
+          return DBHelper.DATABASE_URL.GET.restaurant(id)
+            .then(response => response.json())
+            .then(restaurant => {
+              restaurant.is_favorite = restaurant.is_favorite.toString();
+              idbKey.set(store, restaurant);
+              return restaurant;
+            })
+            .catch(error => console.error(`Restaurant does not exist: ${error}`));
+        } else {
+          return restaurant;
+        }
+      })
+  },
+
+  /**
+   * Fetch restaurants by a cuisine and a neighborhood with proper error handling.
+   */
+  fetchRestaurantByCuisineAndNeighborhood: (cuisine, neighborhood) => {
+    // Fetch all restaurants
+    const store = 'restaurants';
+    return idbKey.getAll(store)
+      .then((cachedResults) => {
+        if (cachedResults.length < 10) {
+          return DBHelper.fetchRestaurants()
+            .then(restaurants => {
+              const results = restaurants;
+              results.forEach((restaurant) => idbKey.set(store, restaurant));
+              return DBHelper.filterResults(results, cuisine, neighborhood);
+            })
+            .catch(error => console.error(error));
+        } else {
+          return DBHelper.filterResults(cachedResults, cuisine, neighborhood);
+        }
+      }).catch((error) => console.error(error));
+  },
+
+  filterResults: (results, cuisine, neighborhood) => {
+    if (cuisine !== 'all') {
+      results = results.filter(restaurant => restaurant.cuisine_type == cuisine);
+    }
+    if (neighborhood !== 'all') {
+      results = results.filter(restaurant => restaurant.neighborhood == neighborhood);
+    }
+    return results;
+  },
+  /**
+   * Fetch all neighborhoods with proper error handling.
+   */
+  addNeighborhoodsOptions: (restaurants) => {
+    // Get all neighborhoods from all restaurants
+    const neighborhoods = restaurants.map(restaurant => restaurant.neighborhood);
+    // Remove duplicates from neighborhoods
+    const uniqueNeighborhoods = neighborhoods.filter((v, i) => neighborhoods.indexOf(v) == i);
+    return uniqueNeighborhoods;
+  },
+
+  /**
+   * Fetch all cuisines with proper error handling.
+   */
+  addCuisinesOptions: (restaurants) => {
+    // Get all cuisines from all restaurants
+    const cuisines = restaurants.map(restaurant => restaurant.cuisine_type);
+    // Remove duplicates from cuisines
+    const uniqueCuisines = cuisines.filter((v, i) => cuisines.indexOf(v) == i);
+    return uniqueCuisines;
+  },
+
+  /**
+   * Restaurant page URL.
+   */
+  urlForRestaurant: (restaurant) => {
+    return (`restaurant.html?id=${restaurant.id}`);
+  },
+
+  /**
+   * Restaurant image URL.
+   */
+  imageUrlForRestaurant: (restaurant) => {
+    return (`assets/img/jpg/${restaurant.photograph}`);
+  },
+  
+  imageWebpUrlForRestaurant: (restaurant) => {
+    return (`assets/img/webp/${restaurant.photograph}`);
+  },
+
+  postReview: async (e) => {
+    console.log('Trying to post review...')
+    e.preventDefault();
+    const form = document.querySelector('#title-container form').elements;
+    const body = {
+      restaurant_id: Number(window.location.search.match(/\d+/)[0]),
+      name: form["name"].value,
+      rating: Number(form["rating"].value),
+      comments: form["comments"].value,
+    }
+    await idbKey.set('posts', body);
+    body.createdAt = Date.now(),
+    body.updatedAt = Date.now();
+    await idbKey.addReview('reviews', body);
+    const registration = await navigator.serviceWorker.ready
+    Notification.requestPermission()
+      .then(function (result) {
+        if (result === 'denied') {
+          console.log('Permission wasn\'t granted. Allow a retry.');
+          return;
+        }
+        if (result === 'default') {
+          console.log('The permission request was dismissed.');
+          return;
+        }
+        if (result === 'granted') { 
+          console.log('Notification allowed')
+        }
+      });
+    await registration.sync.register('post-review');
+    location.reload();
+  },
+
+  setFavorite: async (target, restaurant) => {
+    target.classList.toggle('hidden');
+    const favorite = restaurant.is_favorite === 'true'? 'false' : 'true';
+    const store = 'restaurants';
+    restaurant.is_favorite = favorite;
+    await idbKey.set(store, restaurant);
+    return await DBHelper.DATABASE_URL.PUT.favoriteRestaurant(restaurant.id, favorite);
+  },
+  /**
+   * Map marker for a restaurant.
+   */
+  mapMarkerForRestaurant: (restaurant, map) => {
+    const marker = new google.maps.Marker({
+      position: {
+        lat: restaurant.lat || restaurant.latlng.lat,
+        lng: restaurant.lng || restaurant.latlng.lng
+      },
+      title: restaurant.name,
+      url: DBHelper.urlForRestaurant(restaurant),
+      map: map,
+      animation: google.maps.Animation.DROP,
+      icon: 'assets/img/svg/marker.svg'
+    });
+    return marker;
+  }
+};
+
+module.exports = DBHelper;
+},{"./indexedb":2}],2:[function(require,module,exports){
+const idb = require('../../node_modules/idb/lib/idb');
+
+const openDatabase = () => {
+  return idb.open('restaurant-reviews', 3, (upgradeDb) => {
+    switch (upgradeDb.oldVersion) {
+      case 0:
+        upgradeDb.createObjectStore('restaurants', { keyPath: 'id' });
+      case 1:
+        upgradeDb.createObjectStore('reviews', { keyPath: 'id', autoIncrement:true});
+      case 1:
+        upgradeDb.createObjectStore('posts', {keyPath: 'restaurant_id'});
+    }
+  })
+};
+
+const idbKey = {
+  get(store, key) {
+    return openDatabase().then(db => {
+      if (!db) return;
+      return db
+        .transaction(store)
+        .objectStore(store)
+        .get(key);
+    }).catch(error => console.error(error));
+  },
+  set(store, value) {
+    return openDatabase().then(db => {
+      if (!db) return;
+      const tx = db
+        .transaction(store, 'readwrite')
+        .objectStore(store)
+        .put(value);
+      return tx.complete;
+    }).catch(error => console.error(error));
+  },
+  getAll(store) {
+    return openDatabase().then(db => {
+      if (!db) return;
+      return db
+        .transaction(store)
+        .objectStore(store)
+        .getAll();
+    }).catch(error => console.error(error));
+  },
+  delete(store, id) {
+    return openDatabase().then(db => {
+      if (!db) return;
+      return db
+        .transaction(store, 'readwrite')
+        .objectStore(store)
+        .delete(id);
+    }).catch(error => console.error(error));
+  },
+  addReview(store, review) {
+    return openDatabase().then(db => {
+      if (!db) {
+        return;
+      }
+      return db
+        .transaction(store, 'readwrite')
+        .objectStore(store)
+        .add(review);
+    }).catch(error => console.error(error));
+  },
+  getRestaurantReviews(store, key) {
+    return openDatabase().then(db => {
+      if (!db) return;
+      return db
+        .transaction(store)
+        .objectStore(store)
+        .getAll()
+        .then(reviews => reviews.filter(review => review.restaurant_id === key))
+    }).catch(error => console.error(error));
+  }
+};
+module.exports = idbKey;
+},{"../../node_modules/idb/lib/idb":4}],3:[function(require,module,exports){
+(function (global){
+const window = (typeof self === 'object' && self.self === self && self) ||
+  (typeof global === 'object' && global.global === global && global) ||
+  this;
+const idbKey = require('./js/indexedb');
+const DBHelper = require('./js/dbhelper');
+
+const requestFetched = [];
+const version = 1;
+const CURRENT_CACHES = {
+  CACHE_STATIC: 'static-cache-' + version,
+  CACHE_MAP: 'map-api-' + version,
+  CACHE_FONT: 'google-fonts-' + version
+}
+
+const URLS_TO_CACHE = [
+  'index.html',
+  'manifest.webmanifest',
+  'restaurant.html',
+  'assets/css/fonts/iconicfill.woff2',
+  'assets/css/fonts/fontawesome.woff2',
+  'assets/img/svg/puff.svg',
+  'assets/img/svg/no-wifi.svg',
+  'assets/img/svg/not-favorite.svg',
+  'assets/img/svg/favorite.svg',
+  'assets/img/png/launchScreen-ipad-9.7.png',
+  'assets/img/png/launchScreen-ipadpro-10.5.png',
+  'assets/img/png/launchScreen-ipadpro-12.9.png',
+  'assets/img/png/launchScreen-iphone-8.png',
+  'assets/img/png/launchScreen-iphone-8plus.png',
+  'assets/img/png/launchScreen-iphone-x.png',
+  'assets/img/png/launchScreen-iphone-se.png',
+  'assets/img/png/logo-64.png',
+  'assets/img/png/logo-128.png',
+  'assets/img/png/logo-256.png',
+  'assets/img/png/logo-512.png',
+  'assets/css/index.css',
+  'assets/css/restaurant_info.css',
+  'js/main.js',
+  'js/restaurant_info.js'
+];
+
+self.addEventListener('install', event => {
+  
+  console.log(`SW - Cache version : "${CURRENT_CACHES.CACHE_STATIC}"`);
+
+  event.waitUntil(
+    caches.open(CURRENT_CACHES.CACHE_STATIC)
+      .then(cache => cache.addAll(URLS_TO_CACHE))
+      .then(() => {
+        console.log('SW - All resources cached.');
+        self.skipWaiting(),
+        console.log('SW - SW version skipped.');
+      })
+      .catch(error => console.error('SW - Open cache failed :', error))
+  );
+
+});
+
+self.addEventListener('activate', event => {
+  
+  const expectedCaches = Object.keys(CURRENT_CACHES).map(key => CURRENT_CACHES[key]);
+
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.map(key => {
+          if (expectedCaches.indexOf(key) == -1) {
+            console.log('SW - Deleting', key);
+            return caches.delete(key)
+          }
+        })
+      ))
+      .then(() => {
+        console.log(`SW - "${CURRENT_CACHES.CACHE_STATIC}" now ready to handle fetches!`);
+      })
+  );
+
+});
+
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  const location = window.location;
+  switch (url.hostname) {
+    case 'maps.gstatic.com':
+      event.respondWith(getFromCacheOrFetch(CURRENT_CACHES.CACHE_MAP, event.request));
+    break;
+
+    case 'fonts.gstatic.com':
+      event.respondWith(getFromCacheOrFetch(CURRENT_CACHES.CACHE_FONT, event.request));
+    break;
+
+    case location.hostname:
+      if (url.pathname.startsWith('/restaurant.html')) {
+        const newPath = url.href.replace(/[?&]id=\d{1,}/, '');
+        event.respondWith(getFromCacheOrFetch(CURRENT_CACHES.CACHE_STATIC, newPath));
+      }
+
+      else if (url.pathname.startsWith('/restaurants') || url.pathname.startsWith('/reviews')) {
+        event.respondWith(fetch(event.request));
+      }
+      else if (event.request.method !== 'GET') {
+        event.respondWith(fetch(event.request))
+      }
+      else {
+        event.respondWith(getFromCacheOrFetch(CURRENT_CACHES.CACHE_STATIC, event.request))
+      }
+    break;
+
+    default:
+      event.respondWith(fetch(event.request));
+    break;
+  }
+  
+});
+
+const fetchOnce = ({ url }) => {
+  if (requestFetched.indexOf(url) === -1) {
+    requestFetched.push(url);
+    return fetch(url);
+  }
+  return Promise.reject();
+}
+
+async function handleError(error, { url }) {
+  console.error(error);
+  if (url.match(/\.(jpe?g|webp)$/i)) {
+    const cache = await caches.open(CURRENT_CACHES.CACHE_STATIC);
+    return cache.match('assets/img/svg/no-wifi.svg');
+  }
+}
+
+async function getFromCacheOrFetch(cache_id, request) {
+  const cache = await caches.open(cache_id);
+  const match = await cache.match(request);
+
+  if (match) {
+    return match;
+  }
+  const response = await fetch(request).catch((e) =>  handleError(e, request));
+  if (!response.url.match(/no-wifi.svg$/i)) {
+    cache.put(request, response.clone());
+  }
+  return response;
+}
+
+
+async function postLocalReviews() {
+  const store = 'posts';
+  const reviews = await idbKey.getAll(store).catch(err => console.error(err));
+  
+  return await Promise.all(reviews
+    .map(review => {
+      return DBHelper.DATABASE_URL.POST.newReview(review)
+        .then(response => {
+          console.log('Response after post request', response,'\nStatus :',response.status)
+          if (response.status === 201) {
+            self.registration.showNotification("Review synchronised to server")
+              .then(() => idbKey.delete(store, review.restaurant_id))
+          }
+          return response;
+        })
+        .catch(error => {
+          self.registration.showNotification("Your review will be posted later");
+          console.error('Review not posted',error);
+        })
+    }))
+}
+
+const fetchLastReviews = async () => {
+  const response = await DBHelper.DATABASE_URL.GET.restaurantReviews(location.search.match(/\d+/)[0]);
+  const reviews = await response.json(),
+    store = 'reviews';
+  reviews.forEach(review => idbKey.set(store, review))
+}
+
+self.addEventListener('sync', function (event) {
+  if (event.tag === 'post-review') {
+    event.waitUntil(postLocalReviews());
+  }
+  if (event.lastChance) {
+    console.log('Last time trying to sync')
+  }
+  if (event.tag === 'fetch-new-reviews') {
+    event.waitUntil(fetchLastReviews())
+  }
+});
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./js/dbhelper":1,"./js/indexedb":2}],4:[function(require,module,exports){
+'use strict';
+
+(function() {
+  function toArray(arr) {
+    return Array.prototype.slice.call(arr);
+  }
+
+  function promisifyRequest(request) {
+    return new Promise(function(resolve, reject) {
+      request.onsuccess = function() {
+        resolve(request.result);
+      };
+
+      request.onerror = function() {
+        reject(request.error);
+      };
+    });
+  }
+
+  function promisifyRequestCall(obj, method, args) {
+    var request;
+    var p = new Promise(function(resolve, reject) {
+      request = obj[method].apply(obj, args);
+      promisifyRequest(request).then(resolve, reject);
+    });
+
+    p.request = request;
+    return p;
+  }
+
+  function promisifyCursorRequestCall(obj, method, args) {
+    var p = promisifyRequestCall(obj, method, args);
+    return p.then(function(value) {
+      if (!value) return;
+      return new Cursor(value, p.request);
+    });
+  }
+
+  function proxyProperties(ProxyClass, targetProp, properties) {
+    properties.forEach(function(prop) {
+      Object.defineProperty(ProxyClass.prototype, prop, {
+        get: function() {
+          return this[targetProp][prop];
+        },
+        set: function(val) {
+          this[targetProp][prop] = val;
+        }
+      });
+    });
+  }
+
+  function proxyRequestMethods(ProxyClass, targetProp, Constructor, properties) {
+    properties.forEach(function(prop) {
+      if (!(prop in Constructor.prototype)) return;
+      ProxyClass.prototype[prop] = function() {
+        return promisifyRequestCall(this[targetProp], prop, arguments);
+      };
+    });
+  }
+
+  function proxyMethods(ProxyClass, targetProp, Constructor, properties) {
+    properties.forEach(function(prop) {
+      if (!(prop in Constructor.prototype)) return;
+      ProxyClass.prototype[prop] = function() {
+        return this[targetProp][prop].apply(this[targetProp], arguments);
+      };
+    });
+  }
+
+  function proxyCursorRequestMethods(ProxyClass, targetProp, Constructor, properties) {
+    properties.forEach(function(prop) {
+      if (!(prop in Constructor.prototype)) return;
+      ProxyClass.prototype[prop] = function() {
+        return promisifyCursorRequestCall(this[targetProp], prop, arguments);
+      };
+    });
+  }
+
+  function Index(index) {
+    this._index = index;
+  }
+
+  proxyProperties(Index, '_index', [
+    'name',
+    'keyPath',
+    'multiEntry',
+    'unique'
+  ]);
+
+  proxyRequestMethods(Index, '_index', IDBIndex, [
+    'get',
+    'getKey',
+    'getAll',
+    'getAllKeys',
+    'count'
+  ]);
+
+  proxyCursorRequestMethods(Index, '_index', IDBIndex, [
+    'openCursor',
+    'openKeyCursor'
+  ]);
+
+  function Cursor(cursor, request) {
+    this._cursor = cursor;
+    this._request = request;
+  }
+
+  proxyProperties(Cursor, '_cursor', [
+    'direction',
+    'key',
+    'primaryKey',
+    'value'
+  ]);
+
+  proxyRequestMethods(Cursor, '_cursor', IDBCursor, [
+    'update',
+    'delete'
+  ]);
+
+  // proxy 'next' methods
+  ['advance', 'continue', 'continuePrimaryKey'].forEach(function(methodName) {
+    if (!(methodName in IDBCursor.prototype)) return;
+    Cursor.prototype[methodName] = function() {
+      var cursor = this;
+      var args = arguments;
+      return Promise.resolve().then(function() {
+        cursor._cursor[methodName].apply(cursor._cursor, args);
+        return promisifyRequest(cursor._request).then(function(value) {
+          if (!value) return;
+          return new Cursor(value, cursor._request);
+        });
+      });
+    };
+  });
+
+  function ObjectStore(store) {
+    this._store = store;
+  }
+
+  ObjectStore.prototype.createIndex = function() {
+    return new Index(this._store.createIndex.apply(this._store, arguments));
+  };
+
+  ObjectStore.prototype.index = function() {
+    return new Index(this._store.index.apply(this._store, arguments));
+  };
+
+  proxyProperties(ObjectStore, '_store', [
+    'name',
+    'keyPath',
+    'indexNames',
+    'autoIncrement'
+  ]);
+
+  proxyRequestMethods(ObjectStore, '_store', IDBObjectStore, [
+    'put',
+    'add',
+    'delete',
+    'clear',
+    'get',
+    'getAll',
+    'getKey',
+    'getAllKeys',
+    'count'
+  ]);
+
+  proxyCursorRequestMethods(ObjectStore, '_store', IDBObjectStore, [
+    'openCursor',
+    'openKeyCursor'
+  ]);
+
+  proxyMethods(ObjectStore, '_store', IDBObjectStore, [
+    'deleteIndex'
+  ]);
+
+  function Transaction(idbTransaction) {
+    this._tx = idbTransaction;
+    this.complete = new Promise(function(resolve, reject) {
+      idbTransaction.oncomplete = function() {
+        resolve();
+      };
+      idbTransaction.onerror = function() {
+        reject(idbTransaction.error);
+      };
+      idbTransaction.onabort = function() {
+        reject(idbTransaction.error);
+      };
+    });
+  }
+
+  Transaction.prototype.objectStore = function() {
+    return new ObjectStore(this._tx.objectStore.apply(this._tx, arguments));
+  };
+
+  proxyProperties(Transaction, '_tx', [
+    'objectStoreNames',
+    'mode'
+  ]);
+
+  proxyMethods(Transaction, '_tx', IDBTransaction, [
+    'abort'
+  ]);
+
+  function UpgradeDB(db, oldVersion, transaction) {
+    this._db = db;
+    this.oldVersion = oldVersion;
+    this.transaction = new Transaction(transaction);
+  }
+
+  UpgradeDB.prototype.createObjectStore = function() {
+    return new ObjectStore(this._db.createObjectStore.apply(this._db, arguments));
+  };
+
+  proxyProperties(UpgradeDB, '_db', [
+    'name',
+    'version',
+    'objectStoreNames'
+  ]);
+
+  proxyMethods(UpgradeDB, '_db', IDBDatabase, [
+    'deleteObjectStore',
+    'close'
+  ]);
+
+  function DB(db) {
+    this._db = db;
+  }
+
+  DB.prototype.transaction = function() {
+    return new Transaction(this._db.transaction.apply(this._db, arguments));
+  };
+
+  proxyProperties(DB, '_db', [
+    'name',
+    'version',
+    'objectStoreNames'
+  ]);
+
+  proxyMethods(DB, '_db', IDBDatabase, [
+    'close'
+  ]);
+
+  // Add cursor iterators
+  // TODO: remove this once browsers do the right thing with promises
+  ['openCursor', 'openKeyCursor'].forEach(function(funcName) {
+    [ObjectStore, Index].forEach(function(Constructor) {
+      // Don't create iterateKeyCursor if openKeyCursor doesn't exist.
+      if (!(funcName in Constructor.prototype)) return;
+
+      Constructor.prototype[funcName.replace('open', 'iterate')] = function() {
+        var args = toArray(arguments);
+        var callback = args[args.length - 1];
+        var nativeObject = this._store || this._index;
+        var request = nativeObject[funcName].apply(nativeObject, args.slice(0, -1));
+        request.onsuccess = function() {
+          callback(request.result);
+        };
+      };
+    });
+  });
+
+  // polyfill getAll
+  [Index, ObjectStore].forEach(function(Constructor) {
+    if (Constructor.prototype.getAll) return;
+    Constructor.prototype.getAll = function(query, count) {
+      var instance = this;
+      var items = [];
+
+      return new Promise(function(resolve) {
+        instance.iterateCursor(query, function(cursor) {
+          if (!cursor) {
+            resolve(items);
+            return;
+          }
+          items.push(cursor.value);
+
+          if (count !== undefined && items.length == count) {
+            resolve(items);
+            return;
+          }
+          cursor.continue();
+        });
+      });
+    };
+  });
+
+  var exp = {
+    open: function(name, version, upgradeCallback) {
+      var p = promisifyRequestCall(indexedDB, 'open', [name, version]);
+      var request = p.request;
+
+      if (request) {
+        request.onupgradeneeded = function(event) {
+          if (upgradeCallback) {
+            upgradeCallback(new UpgradeDB(request.result, event.oldVersion, request.transaction));
+          }
+        };
+      }
+
+      return p.then(function(db) {
+        return new DB(db);
+      });
+    },
+    delete: function(name) {
+      return promisifyRequestCall(indexedDB, 'deleteDatabase', [name]);
+    }
+  };
+
+  if (typeof module !== 'undefined') {
+    module.exports = exp;
+    module.exports.default = module.exports;
+  }
+  else {
+    self.idb = exp;
+  }
+}());
+
+},{}]},{},[3]);

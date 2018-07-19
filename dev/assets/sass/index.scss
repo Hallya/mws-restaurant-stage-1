@@ -376,37 +376,37 @@ nav {
 /* ====================== Restaurant Filtering ====================== */
 
 .filter-options {
-      position: absolute;
-      box-shadow: $box-shadow;
-      z-index: 1;
-      top: 0;
-      left: 0;
-      right: 20vw;
-      padding: 10px;
-      display: flex;
-      flex-flow: wrap row;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      overflow: hidden;
-      border-bottom: 3px solid #ff0404;
-      border-bottom-left-radius: 25px;
-      border-bottom-right-radius: 25px;
-      background: $background-primary-color;
-      transition: transform  0.3s ease-in-out 0s, opacity 0s linear 0.3s;
-      will-change: transform;
-      will-change: opacity;
-      transform: translateZ(0);
-      transform: translateY(-14em);
-      opacity: 0;
-      @include m {
-        transform: translateY(-8em);
-        z-index: 1;
-        right: 0;
-      }
-      h3 {
-        color: #6d0090;
-        font-weight: normal;
+  position: absolute;
+  box-shadow: $box-shadow;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  right: 20vw;
+  padding: 10px;
+  display: flex;
+  flex-flow: wrap row;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  border-bottom: 3px solid #ff0404;
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+  background: $background-primary-color;
+  transition: transform  0.3s ease-in-out 0s, opacity 0s linear 0.3s;
+  will-change: transform;
+  will-change: opacity;
+  transform: translateZ(0);
+  transform: translateY(-14em);
+  opacity: 0;
+  @include m {
+    transform: translateY(-8em);
+    z-index: 1;
+    right: 0;
+  }
+  h3 {
+    color: #6d0090;
+    font-weight: normal;
     margin: 0%;
     width: 100%;
     font-size: 1.7em;
@@ -417,16 +417,35 @@ nav {
       text-align: center;
     }
   }
-  
-  select {
+  #favorites, select {
+    width: 220px;
+    margin: 10px;
+    font-family: 'Righteous', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    border-radius: 5px;
     background-color: transparent;
     border: 1px solid #e6e6e6;
     color: $second-color;
     font-size: 1.3em;
     height: 35px;
     letter-spacing: 0;
-    margin: 10px;
-    width: 200px;
+    padding-left: 10px;
+    text-align: left;
+  }
+  label#favorites {
+    width: 207px;
+    &.active {
+      background: $first-color;
+    }
+    input[type="checkbox"] {
+      opacity: 0;
+      width: 0px;
+      padding: 0;
+      margin: 0;
+
+      &:checked {
+        color: red;
+      }
+    }
   }
 }
 
@@ -536,6 +555,30 @@ nav {
     }
     @include xl {
       width: 25%;
+    }
+    .container--favorite {
+      position: absolute;
+      bottom: 18%;
+      left: 0%;
+      margin: 0;
+      padding: 0;
+      z-index: 5;
+      height: 50px;
+      width: 50px;
+      
+      #not-favorite, #favorite {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        margin: 0;
+        padding: 0;
+        z-index: 5;
+        transition: 0.3s ease;
+      }
+      #not-favorite.hidden {
+        opacity: 0;
+      }
     }
     h2   {
       text-align: left;

@@ -151,6 +151,11 @@ gulp.task('webp', () => {
     .pipe(gulp.dest('dist/assets/img/webp'));
 })
 
+gulp.task('svg', () => {
+  gulp.src('dev/assets/img/svg/*')
+    .pipe(gulp.dest('dist/assets/img/svg'));
+})
+
 gulp.task('styles', () => {
   gulp.src('dev/assets/sass/**/*.scss')
     .pipe(sass({ outputStyle: 'compressed'}).on('error', sass.logError))
