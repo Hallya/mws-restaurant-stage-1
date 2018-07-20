@@ -272,12 +272,20 @@ const
   filterOptions = document.querySelector('.filter-options'),
   filterButton = document.getElementById('menuFilter');
   filterResultHeading = document.querySelector('.filter-options h3');
-  
+
 const launch = {
+
+  /**
+   * function go to restaurant page.
+   */
   goToRestaurantPage: (e) => {
     e.target.classList.toggle('move-left');
     window.location.assign(e.target.dataset.url)
   },
+
+  /**
+   * function to create a fixed cloned element, in order to always keep access to controls for the user.
+   */
   fixedOnViewport: (referer, target) => {
 
     const clonedTarget = target.cloneNode(true);
@@ -310,6 +318,9 @@ const launch = {
     }
   },
 
+  /**
+   * Show or hide the filter menu in main page
+   */
   toggleMenu: () => {
     filterOptions.classList.toggle('optionsOpen');
     filterOptions.setAttribute('aria-hidden', 'false');
@@ -318,6 +329,10 @@ const launch = {
     filterResultHeading.setAttribute('tabindex', '-1');
     filterResultHeading.focus();
   },
+
+  /**
+   * Check weither the form is valid and apply style to give feedback to user.
+   */
   isFormValid: () => {
     if (document.querySelector('form').checkValidity()) {
       document.querySelector('form input[type="submit"]').style.color = "green";
@@ -325,6 +340,10 @@ const launch = {
       document.querySelector('form input[type="submit"]').style.color = "#ca0000";
     }
   },
+
+  /**
+   * Create animation on form creation or removal.
+   */
   toggleForm: () => {
     document.getElementById('title-container').classList.toggle("reviews-toggled");
     document.getElementById('reviews-list').classList.toggle("reviews-toggled");
@@ -333,6 +352,10 @@ const launch = {
       document.querySelector('section form').classList.toggle("toggled-translate");
     },800)
   },
+
+  /**
+   * Function to lazy load image on main page.
+   */
   lazyLoading:() => {
     const lazyImages = [].slice.call(document.querySelectorAll('.lazy'));
 
@@ -417,6 +440,10 @@ const launch = {
       }
     }
   },
+
+  /**
+   * Sort restaurants by there notes on main page.
+   */
   sortByNote: (a, b) => {
     const aNote = launch.getAverageNote(a.reviews)
     const bNote = launch.getAverageNote(b.reviews)
@@ -428,12 +455,25 @@ const launch = {
     }
     return 0;
   },
+
+  /**
+   * Sort increasingly restaurants by there names on main page.
+   */
   sortByName: (a, b) => {
     return a.name > b.name;
   },
+
+  /**
+   * Sort decreasingly restaurants by there name on main page.
+   */
   sortByNameInverted: (a, b) => {
     return a.name < b.name; 
   },
+
+
+  /**
+   * Get the average note for each restaurant.
+   */
   getAverageNote: (id, reviews = self.reviews) => {
     let totalRatings = 0;
     let totalReviews = 0;
@@ -446,19 +486,14 @@ const launch = {
     totalRatings = totalRatings / totalReviews;
     return totalRatings && `${(Math.round(totalRatings * 10)) / 10}/5` || 'N/A';
   },
-  switchToDefaultImage: (event, observer) => {
-    observer.unobserve(event.target);
-    if (event.target.localName === 'source') {
-      return event.target.srcset = 'assets/img/svg/no-wifi.svg';
-    } else {
-      return event.target.src = 'assets/img/svg/no-wifi.svg';
-    }
-  }
 };
 module.exports = launch;
 },{}],3:[function(require,module,exports){
 const idb = require('../../node_modules/idb/lib/idb');
 
+/**
+ * function connect to indexedDB and all it differents ObjectStore.
+ */
 const openDatabase = () => {
   return idb.open('restaurant-reviews', 3, (upgradeDb) => {
     switch (upgradeDb.oldVersion) {
@@ -472,6 +507,9 @@ const openDatabase = () => {
   })
 };
 
+/**
+ * All types of actions that can be made in indexedDB.
+ */
 const idbKey = {
   get(store, key) {
     return openDatabase().then(db => {

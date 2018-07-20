@@ -1,5 +1,8 @@
 const idb = require('../../node_modules/idb/lib/idb');
 
+/**
+ * function connect to indexedDB and all it differents ObjectStore.
+ */
 const openDatabase = () => {
   return idb.open('restaurant-reviews', 3, (upgradeDb) => {
     switch (upgradeDb.oldVersion) {
@@ -13,6 +16,9 @@ const openDatabase = () => {
   })
 };
 
+/**
+ * All types of actions that can be made in indexedDB.
+ */
 const idbKey = {
   get(store, key) {
     return openDatabase().then(db => {
