@@ -135,6 +135,23 @@ const fillRestaurantHTML = (restaurant = self.restaurant) => {
   image.alt = `${restaurant.name}'s  restaurant`;
   image.type = 'image/jpeg';
 
+  const containerFavorite = document.createElement('button');
+  const notFavorite = document.createElement('img');
+  const favorite = document.createElement('img');
+
+  containerFavorite.className = 'container--favorite';
+  containerFavorite.id = restaurant.id;
+  containerFavorite.addEventListener('click',
+    () => DBHelper.setFavorite(notFavorite, restaurant));
+  notFavorite.src = 'assets/img/svg/not-favorite.svg';
+  notFavorite.id = 'not-favorite';
+  notFavorite.className = restaurant.is_favorite === 'true' && 'hidden';
+  favorite.src = 'assets/img/svg/favorite.svg';
+  favorite.id = 'favorite';
+
+  containerFavorite.append(favorite);
+  containerFavorite.append(notFavorite);
+  
   picture.appendChild(sourceWebp);
   picture.appendChild(source);
   picture.appendChild(ndSourceWebp);
@@ -143,6 +160,7 @@ const fillRestaurantHTML = (restaurant = self.restaurant) => {
   picture.appendChild(thSource);
   picture.appendChild(image);
   figure.insertBefore(picture, figcaption);
+  figure.append(containerFavorite);
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;

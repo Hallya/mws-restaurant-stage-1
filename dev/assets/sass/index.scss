@@ -77,6 +77,8 @@ $background-secondary-color: #252831;
 [class*="fontawesome-"]:before {
   content: '\f061';
   font-family: 'breadcrumb', sans-serif;
+  position: absolute;
+  right: 17px;
 }
 
 
@@ -433,8 +435,11 @@ nav {
   }
   label#favorites {
     width: 207px;
+    transition: .3s;
+
     &.active {
       background: $first-color;
+      color: white;
     }
     input[type="checkbox"] {
       opacity: 0;
@@ -558,14 +563,18 @@ nav {
     }
     .container--favorite {
       position: absolute;
+      background: transparent;
+      border: none;
       bottom: 18%;
-      left: 0%;
+      left: 2%;
       margin: 0;
       padding: 0;
       z-index: 5;
       height: 50px;
       width: 50px;
-      
+      @include xl {
+        bottom: 16%;
+      }
       #not-favorite, #favorite {
         position: absolute;
         width: 100%;
