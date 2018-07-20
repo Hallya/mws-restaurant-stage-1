@@ -559,7 +559,7 @@ const
   loader = document.querySelector('#map-loader');
 
 /**
- * Fetch neighborhoods and cuisines as soon as the page is loaded.
+ * Try to register to service worker and fetch restaurants depending of filters as soon as the DOM is loaded.
  */
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -577,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Register to service worker if the browser is compatible.
+ * Add event listeners to filters features.
  */
 window.addEventListener('load', () => {
   
@@ -593,9 +593,9 @@ window.addEventListener('load', () => {
   neighborhoodsSelect.addEventListener('change', updateRestaurants);
   sortSelect.addEventListener('change', updateRestaurants);
   favoritesCheckbox.addEventListener('change', updateRestaurants);
+  filterButton.addEventListener('click', launch.toggleMenu);
 });
     
-filterButton.addEventListener('click', launch.toggleMenu);
 
 /**
  * If select/filter menu is open, press enter will make the restaurants list focus.
@@ -608,15 +608,17 @@ document.onkeypress = function (e) {
     document.getElementById('skip').click();
   }
 };
+
 /**
- * Fetch all neighborhoods and set their HTML.
+ * Get neighborhoods select options and add it.
  */
 const addNeighborhoodsOptions = (restaurants = self.restaurants) => {
   self.neighborhoods = DBHelper.addNeighborhoodsOptions(restaurants);
   fillNeighborhoodsHTML();
 };
+
 /**
- * Fetch all cuisines and set their HTML.
+ * Get cuisines select options and add it.
  */
 const addCuisinesOptions = (restaurants = self.restaurants) => {
   self.cuisines = DBHelper.addCuisinesOptions(restaurants);
@@ -624,7 +626,7 @@ const addCuisinesOptions = (restaurants = self.restaurants) => {
 };
 
 /**
- * Set neighborhoods HTML.
+ * Fill neighborhoods options.
  */
 const fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
   const select = neighborhoodsSelect;
@@ -638,8 +640,9 @@ const fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
     select.append(option);
   });
 };
+
 /**
- * Set cuisines HTML.
+ * Fill neighborhoods options.
  */
 const fillCuisinesHTML = (cuisines = self.cuisines) => {
   const select = cuisinesSelect;
@@ -655,7 +658,7 @@ const fillCuisinesHTML = (cuisines = self.cuisines) => {
 };
 
 /**
- * Initialize Google map, called from HTML.
+ * Initialize Google map, called from restaurant.html and switch loader to map when all tiles are loaded.
  */
 window.initMap = () => {
   
@@ -688,7 +691,7 @@ window.initMap = () => {
 };
 
 /**
- * Update page and map for current restaurants.
+ * Update list of restaurant depending on filters.
  */
 const updateRestaurants = async () => {
   const cSelect = cuisinesSelect;
@@ -746,6 +749,9 @@ const resetRestaurants = (restaurants) => {
   return restaurants;
 };
 
+/**
+ * Add sort options in filter menu.
+ */
 const addSortOptions = () => {
   sortOptions = ['Note', 'A-Z', 'Z-A'];
   sortOptions.forEach(sortOption => {
@@ -759,6 +765,9 @@ const addSortOptions = () => {
   });
 }
 
+/**
+ * Filter favorites restaurants from others.
+ */
 const getFavorites = (restaurants = self.restaurants) => {
   favorites && document.getElementById('favorites').classList.add('active');
   !favorites && document.getElementById('favorites').classList.remove('active');
@@ -766,6 +775,7 @@ const getFavorites = (restaurants = self.restaurants) => {
     .filter(restaurant => favorites && restaurant.is_favorite === 'true' || !favorites && restaurant
     );
 }
+
 /**
  * Sort restaurants.
  */
@@ -786,18 +796,10 @@ const sortRestaurantsBy = (restaurants = self.restaurants) => {
       break;
   }
 }
-/**
- * Create all restaurants HTML and add them to the webpage.
- */
-function* restaurantGenerator(restaurants = self.restaurants) {
-  let i = 0
-  while (restaurants[i]) {
-    const restaurant = createRestaurantHTML(restaurants[i]);
-    yield restaurant;
-    i++;
-  }
-}
 
+/**
+ * Iterate on list of restaurants to create them.
+ */
 const generateRestaurantsHTML = (restaurants = self.restaurants) => {
   const ul = document.getElementById('restaurants-list');
   restaurants.forEach(restaurant => ul.append(createRestaurantHTML(restaurant)));
@@ -940,7 +942,6 @@ const addMarkersToMap = (restaurants = self.restaurants) => {
     self.markers.push(marker);
   });
 };
-
 
 /**
  * Create a banner to notified the possibility to add the page as an app.

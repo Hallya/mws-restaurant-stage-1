@@ -6,12 +6,18 @@ const DBHelper = require('./js/dbhelper');
 
 const requestFetched = [];
 const version = 7;
+/**
+ * Object containing different cache names.
+ */
 const CURRENT_CACHES = {
   CACHE_STATIC: 'static-cache-' + version,
   CACHE_MAP: 'map-api-' + version,
   CACHE_FONT: 'google-fonts-' + version
 }
 
+/**
+ * List of files to add put in cache immediately at first connexion.
+ */
 const URLS_TO_CACHE = [
   'index.html',
   'manifest.webmanifest',
@@ -39,6 +45,9 @@ const URLS_TO_CACHE = [
   'js/restaurant_info.js'
 ];
 
+/**
+ * Event triggered when a service worker is in installing state, it will add a set of static files.
+ */
 self.addEventListener('install', event => {
   
   console.log(`SW - Cache version : "${CURRENT_CACHES.CACHE_STATIC}"`);
@@ -56,6 +65,9 @@ self.addEventListener('install', event => {
 
 });
 
+/**
+ * Event triggered when a service worker is in activating state, it will remove old cache to keep the latest.
+ */
 self.addEventListener('activate', event => {
   
   const expectedCaches = Object.keys(CURRENT_CACHES).map(key => CURRENT_CACHES[key]);
@@ -76,6 +88,9 @@ self.addEventListener('activate', event => {
 
 });
 
+/**
+ * Event triggered when a service worker is active and intercepting all request, it will act differentely depending on url request.
+ */
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   const location = window.location;
@@ -112,14 +127,9 @@ self.addEventListener('fetch', event => {
   
 });
 
-const fetchOnce = ({ url }) => {
-  if (requestFetched.indexOf(url) === -1) {
-    requestFetched.push(url);
-    return fetch(url);
-  }
-  return Promise.reject();
-}
-
+/**
+ * Handle any error and return default image if request for webp or jpg fails.
+ */
 async function handleError(error, { url }) {
   console.error(error);
   if (url.match(/\.(jpe?g|webp)$/i)) {
@@ -128,6 +138,9 @@ async function handleError(error, { url }) {
   }
 }
 
+/**
+ * The function name speak for itself ;).
+ */
 async function getFromCacheOrFetch(cache_id, request) {
   const cache = await caches.open(cache_id);
   const match = await cache.match(request);
@@ -142,7 +155,9 @@ async function getFromCacheOrFetch(cache_id, request) {
   return response;
 }
 
-
+/**
+ * Function called on "post-review" tag event, it will try to post reviews to server.
+ */
 async function postLocalReviews() {
   const store = 'posts';
   const reviews = await idbKey.getAll(store).catch(err => console.error(err));
@@ -165,6 +180,9 @@ async function postLocalReviews() {
     }))
 }
 
+/**
+ * Function called on "fetch-new-reviews" tag event, it will add or update new reviews.
+ */
 const fetchLastReviews = async () => {
   const response = await DBHelper.DATABASE_URL.GET.restaurantReviews(location.search.match(/\d+/)[0]);
   const reviews = await response.json(),

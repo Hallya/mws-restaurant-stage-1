@@ -6,6 +6,9 @@ var map;
 
 const mapLoader = document.getElementById('map-loader');
 
+/**
+ * Try to register to service worker.
+ */
 window.addEventListener('load', () => {
   if ('serviceWorker' in navigator && 'SyncManager' in window) {
     const pathToServiceWorker = window.location.hostname === 'hallya.github.io' ? '/mws-restaurant-stage-1/sw.js' : '../sw.js'
@@ -17,6 +20,7 @@ window.addEventListener('load', () => {
       });
   }
 });
+
 /**
  * Initialize Google map, called from HTML.
  */
@@ -51,7 +55,7 @@ window.initMap = () => {
 };
 
 /**
- * Get current restaurant from page URL.
+ * Get restaurant from id in URL.
  */
 const fetchRestaurantFromURL = () => {
   if (self.restaurant) { // restaurant already fetched!
@@ -202,7 +206,6 @@ const fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hour
   }
 };
 
-
 /**
  * Create all reviews HTML and add them to the webpage.
  */
@@ -241,6 +244,9 @@ const fillReviewsHTML = (reviews = self.reviews) => {
   container.appendChild(ul);
 };
 
+/**
+ * create and display a form on click event.
+ */
 const showForm = () => {
 
   const form = document.createElement('form');
@@ -336,6 +342,9 @@ const showForm = () => {
   document.querySelectorAll('#title-container button span').forEach(span => span.classList.toggle('toggled'))
 }
 
+/**
+ * hide and remove the form on click event.
+ */
 const hideForm = () => {
   document.querySelector('#title-container form').classList.toggle('form-toggled');
   document.getElementById('title-container').classList.toggle('form-open');
@@ -420,7 +429,9 @@ const getParameterByName = (name, url) => {
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 };
 
-
+/**
+ * Modify text area heigth to adapt the content.
+ */
 function autosize() {
   const el = this;
   document.getElementById('title-container').style.height = 'auto';
