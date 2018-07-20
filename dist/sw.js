@@ -243,7 +243,7 @@ const DBHelper = {
     target.classList.toggle('hidden');
     const favorite = restaurant.is_favorite === 'true'? 'false' : 'true';
     const store = 'restaurants';
-    button.setAttribute('aria-label', target.classList.contains('hidden') ? 'unset this restaurant as favorite':'set this restaurant as favorite');
+    button.setAttribute('aria-label', target.classList.contains('hidden') ? `unset ${restaurant.name} as favorite`:`set ${restaurant.name} as favorite`);
     target.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'true':'false');
     secondTarget.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'false':'true');
     restaurant.is_favorite = favorite;

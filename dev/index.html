@@ -55,7 +55,7 @@
         <button id="menuFilter" class="iconicfill-equalizer" role="button" aria-labelledby="filtersSettings"></button>
       <label id="filtersSettings" hidden>Filter settings</label>
     </nav>
-    <aside class="filter-options" role="menu" aria-hidden="true">
+    <aside class="filter-options" role="menu" hidden>
       <h3 id="filters" aria-label="filters menu"></h3>
       <label id="location" hidden>Choose your location</label>
       <select id="neighborhoods-select" hidden aria-labelledby="location" name="neighborhoods">
@@ -69,8 +69,8 @@
       <select id="sort-select" hidden aria-labelledby="sort" name="sort">
         <option value="Relevance" role="option" aria-setsize="4" aria-posinset="1">Relevant</option>
       </select>
-      <label id="favorites" >
-        <input aria-labelledby="favorites" hidden role="checkbox" type="checkbox">
+      <label id="favorites" hidden>
+        <input aria-labelledby="favorites" role="checkbox" type="checkbox">
           Favorites
         </input>
       </label>

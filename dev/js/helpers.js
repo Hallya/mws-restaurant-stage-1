@@ -1,9 +1,13 @@
 const
   filterOptions = document.querySelector('.filter-options'),
-  filterButton = document.getElementById('menuFilter');
-  filterResultHeading = document.querySelector('.filter-options h3');
+  filterButton = document.getElementById('menuFilter'),
+  filterResultHeading = document.querySelector('.filter-options h3'),
+  neighborhoodSelect = document.querySelector('#neighborhoods-select'),
+  cuisineSelect = document.querySelector('#cuisines-select'),
+  sortSelect = document.querySelector('#sort-select'),
+  favorites = document.querySelector('#favorites'),
 
-const launch = {
+  launch = {
 
   /**
    * function go to restaurant page.
@@ -53,7 +57,13 @@ const launch = {
    */
   toggleMenu: () => {
     filterOptions.classList.toggle('optionsOpen');
-    filterOptions.setAttribute('aria-hidden', 'false');
+    [filterOptions, neighborhoodSelect, cuisineSelect, sortSelect, favorites].forEach(filter => {
+      filter.hidden = filter.hidden ? false : setTimeout(() => true, 2000);
+    });
+
+    // cuisineSelect.hidden = !cuisineSelect.hidden;
+    // sortSelect.hidden = !sortSelect.hidden;
+    // favorites.hidden = !favorites.hidden;
     filterButton.classList.toggle('pressed');
     filterButton.blur();
     filterResultHeading.setAttribute('tabindex', '-1');

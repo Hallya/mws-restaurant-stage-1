@@ -243,7 +243,7 @@ const DBHelper = {
     target.classList.toggle('hidden');
     const favorite = restaurant.is_favorite === 'true'? 'false' : 'true';
     const store = 'restaurants';
-    button.setAttribute('aria-label', target.classList.contains('hidden') ? 'unset this restaurant as favorite':'set this restaurant as favorite');
+    button.setAttribute('aria-label', target.classList.contains('hidden') ? `unset ${restaurant.name} as favorite`:`set ${restaurant.name} as favorite`);
     target.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'true':'false');
     secondTarget.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'false':'true');
     restaurant.is_favorite = favorite;
@@ -273,10 +273,14 @@ module.exports = DBHelper;
 },{"./indexedb":3}],2:[function(require,module,exports){
 const
   filterOptions = document.querySelector('.filter-options'),
-  filterButton = document.getElementById('menuFilter');
-  filterResultHeading = document.querySelector('.filter-options h3');
+  filterButton = document.getElementById('menuFilter'),
+  filterResultHeading = document.querySelector('.filter-options h3'),
+  neighborhoodSelect = document.querySelector('#neighborhoods-select'),
+  cuisineSelect = document.querySelector('#cuisines-select'),
+  sortSelect = document.querySelector('#sort-select'),
+  favorites = document.querySelector('#favorites'),
 
-const launch = {
+  launch = {
 
   /**
    * function go to restaurant page.
@@ -326,7 +330,13 @@ const launch = {
    */
   toggleMenu: () => {
     filterOptions.classList.toggle('optionsOpen');
-    filterOptions.setAttribute('aria-hidden', 'false');
+    [filterOptions, neighborhoodSelect, cuisineSelect, sortSelect, favorites].forEach(filter => {
+      filter.hidden = filter.hidden ? false : setTimeout(() => true, 2000);
+    });
+
+    // cuisineSelect.hidden = !cuisineSelect.hidden;
+    // sortSelect.hidden = !sortSelect.hidden;
+    // favorites.hidden = !favorites.hidden;
     filterButton.classList.toggle('pressed');
     filterButton.blur();
     filterResultHeading.setAttribute('tabindex', '-1');

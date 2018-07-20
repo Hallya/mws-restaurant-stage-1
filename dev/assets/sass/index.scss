@@ -395,7 +395,7 @@ nav {
   border-bottom-left-radius: 25px;
   border-bottom-right-radius: 25px;
   background: $background-primary-color;
-  transition: transform  0.3s ease-in-out 0s, opacity 0s linear 0.3s;
+  transition: transform  0.3s ease-in, opacity 0s linear 0.3s;
   will-change: transform;
   will-change: opacity;
   transform: translateZ(0);
@@ -457,7 +457,7 @@ nav {
 .optionsOpen {
   transform: translateZ(0);
   transform: translateY(0em);
-  transition: transform 0.3s ease-in-out 0s, opacity 0s linear 0s;
+  transition: transform 0.3s ease-in, opacity 0s linear 0s;
   visibility: visible;
   opacity: 1;
   will-change: transform;
@@ -596,7 +596,7 @@ nav {
       height: 3em;
       margin: 0 auto;
       font-family: 'Righteous', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-      font-size: 14pt;
+      font-size: 13pt;
       font-weight: 200;
       letter-spacing: 2px;
       line-height: 3em;

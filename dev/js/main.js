@@ -340,13 +340,16 @@ const createRestaurantHTML = (restaurant) => {
   restaurant.average_rating = launch.getAverageNote(restaurant.id);
 
   note.innerHTML = `${restaurant.average_rating}`;
+  note.setAttribute('aria-hidden', 'true');
   containerNote.append(note);
   containerNote.id = 'container-note';
+  containerNote.tabIndex = 0;
+  containerNote.setAttribute('aria-label', `${restaurant.name} has a rate of ${restaurant.average_rating.replace('/5', ' on 5')}`)
 
   containerFavorite.className = 'container--favorite';
   containerFavorite.id = restaurant.id;
   containerFavorite.role = 'button';
-  containerFavorite.setAttribute('aria-label', restaurant.is_favorite === 'true' ? 'unset this restaurant as favorite':'set this restaurant as favorite');
+  containerFavorite.setAttribute('aria-label', restaurant.is_favorite === 'true' ? `unset ${restaurant.name} as favorite`:`set ${restaurant.name} as favorite`);
   containerFavorite.addEventListener('click',
     () => DBHelper.setFavorite(notFavorite, restaurant, containerFavorite, favorite));
   notFavorite.src = 'assets/img/svg/not-favorite.svg';
@@ -372,6 +375,7 @@ const createRestaurantHTML = (restaurant) => {
 
   const more = document.createElement('a');
   more.innerHTML = '';
+  more.tabIndex = 0;
   more.className = 'fontawesome-arrow-right';
   more.dataset.url = DBHelper.urlForRestaurant(restaurant);
   more.addEventListener('click', launch.goToRestaurantPage)
@@ -383,6 +387,7 @@ const createRestaurantHTML = (restaurant) => {
   figcaption.append(more);
   figure.append(figcaption);
   
+  li.tabIndex = 0;
   li.append(containerNote);
   li.append(figure);
   
