@@ -5,7 +5,7 @@ const idbKey = require('./js/indexedb');
 const DBHelper = require('./js/dbhelper');
 
 const requestFetched = [];
-const version = 7;
+const version = 2;
 const CURRENT_CACHES = {
   CACHE_STATIC: 'static-cache-' + version,
   CACHE_MAP: 'map-api-' + version,

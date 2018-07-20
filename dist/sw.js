@@ -80,49 +80,34 @@ const DBHelper = {
    * Fetch all reviews.
    */
   fetchReviews: () => {
-    const store = 'reviews';
-    return idbKey.getAll(store)
+    return DBHelper.DATABASE_URL.GET.allReviews()
+    .then(response => response.json())
     .then(reviews => {
-      if (reviews.length < 10) {
-        return DBHelper.DATABASE_URL.GET.allReviews()
-        .then(response => response.json())
-        .then(reviews => {
-          console.log('- Reviews data fetched !');
-          return reviews.reviews || reviews;
-        })
-        .catch(error => console.error(`Request failed. Returned status of ${error}`));
-      } else {
-        return reviews;
-      }
-    }).catch(error => {
-      console.error(error)
-    });
+      console.log('- Reviews data fetched !');
+      return reviews.reviews || reviews;
+    })
+    .catch(error => console.error(`Request failed. Returned status of ${error}`));
   },
   
   /**
    * Fetch restaurant reviews.
    */
-  fetchRestaurantReviews: (id) => {
+  fetchRestaurantReviews: async (id) => {
     const store = 'reviews';
-    return idbKey.getAll(store).then(reviews => {
-      if (!reviews.length) {
-        return DBHelper.DATABASE_URL.GET.restaurantReviews(id)
-        .then(response => response.json())
-        .then(reviews => {
-          console.log('- Restaurant reviews fetched !');
-          return reviews.reviews || reviews;
-        })
-        .then(reviews => {
-          reviews.forEach(review => idbKey.set(store, review));
-          return reviews;
-        })
-        .catch(error => console.error(`Request failed. Returned status of ${error}`));
-      } else {
-        return reviews;
-      }
-    }).catch(error => {
-      console.error(error)
-    });
+    let cachedReviews = await idbKey.getAll(store).catch(error => console.error(error))
+    cachedReviews = cachedReviews.filter(review => review.restaurant_id === Number(id));
+    
+    if (!cachedReviews.length) {
+      const response = await DBHelper.DATABASE_URL.GET.restaurantReviews(id).catch(error => console.error(`Request failed. Returned status of ${error}`));
+      console.log('- Restaurant reviews fetched !');
+      let reviews = await response && response.json();
+      reviews = await reviews && reviews.reviews || await reviews;
+      await reviews && await reviews.length && await reviews.forEach(review => idbKey.set(store, review));
+      return reviews;
+    } 
+    else {
+      return cachedReviews;
+    };
   },
   
   /**
@@ -368,7 +353,7 @@ const idbKey = require('./js/indexedb');
 const DBHelper = require('./js/dbhelper');
 
 const requestFetched = [];
-const version = 4;
+const version = 7;
 const CURRENT_CACHES = {
   CACHE_STATIC: 'static-cache-' + version,
   CACHE_MAP: 'map-api-' + version,

@@ -158,12 +158,10 @@ const updateRestaurants = async () => {
   const cSelect = cuisinesSelect;
   const nSelect = neighborhoodsSelect;
   const sSelect = sortSelect;
-  const fSelect = favoritesCheckbox;
 
   const cIndex = cSelect.selectedIndex;
   const nIndex = nSelect.selectedIndex;
   const sIndex = sSelect.selectedIndex;
-  const fIndex = favoritesCheckbox.checked;
 
   if (cuisine === cSelect[cIndex].value
     && neighborhood === nSelect[nIndex].value
@@ -292,7 +290,7 @@ const createRestaurantHTML = (restaurant) => {
   const notFavorite = document.createElement('img');
   const favorite = document.createElement('img');
 
-  
+
   sourceWebp.dataset.srcset = `${DBHelper.imageWebpUrlForRestaurant(restaurant)}-large_x1.webp 1x, ${DBHelper.imageWebpUrlForRestaurant(restaurant)}-large_x2.webp 2x`;
   sourceWebp.srcset = 'assets/img/svg/puff.svg';
   sourceWebp.media = '(min-width: 1000px)';
