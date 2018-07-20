@@ -58,19 +58,19 @@
     <aside class="filter-options" role="menu" hidden>
       <h3 id="filters" aria-label="filters menu"></h3>
       <label id="location" hidden>Choose your location</label>
-      <select id="neighborhoods-select" hidden aria-labelledby="location" name="neighborhoods">
+      <select id="neighborhoods-select" role="listbox" hidden aria-labelledby="location" name="neighborhoods">
         <option value="all" role="option" aria-setsize="4" aria-posinset="1">All Neighborhoods</option>
       </select>
       <label id="cuisines" hidden>Choose your type of food</label>
-      <select id="cuisines-select" hidden aria-labelledby="cuisines" name="cuisines">
+      <select id="cuisines-select" role="listbox" hidden aria-labelledby="cuisines" name="cuisines">
         <option value="all" role="option" aria-setsize="4" aria-posinset="1">All Cuisines</option>
       </select>
       <label id="sort" hidden>Sort restaurants</label>
-      <select id="sort-select" hidden aria-labelledby="sort" name="sort">
+      <select id="sort-select" role="listbox" hidden aria-labelledby="sort" name="sort">
         <option value="Relevance" role="option" aria-setsize="4" aria-posinset="1">Relevant</option>
       </select>
       <label id="favorites" hidden>
-        <input aria-labelledby="favorites" role="checkbox" type="checkbox">
+        <input aria-labelledby="favorites" role="menuitemcheckbox" type="checkbox">
           Favorites
         </input>
       </label>

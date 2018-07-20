@@ -575,7 +575,7 @@ nav {
       @include xl {
         bottom: 16%;
       }
-      #not-favorite, #favorite {
+      .not-favorite, .favorite {
         position: absolute;
         width: 100%;
         height: 100%;
@@ -585,7 +585,7 @@ nav {
         z-index: 5;
         transition: 0.3s ease;
       }
-      #not-favorite.hidden {
+      .not-favorite.hidden {
         opacity: 0;
       }
     }
@@ -618,7 +618,7 @@ nav {
       border-top-right-radius: 25px;
       border-top-left-radius: 25px;
     }
-    #container-note {
+    .container-note {
       position: absolute;
       top: 0;
       right: 0;

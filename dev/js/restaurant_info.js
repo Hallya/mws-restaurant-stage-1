@@ -28,7 +28,7 @@ window.initMap = () => {
   fetchRestaurantFromURL()
     .then(restaurant => {
       const mapPlaceHolder = document.createElement('div');
-      mapPlaceHolder.setAttribute('tabindex', '-1');
+      mapPlaceHolder.setAttribute('aria-hidden', 'true');
       mapPlaceHolder.setAttribute('aria-hidden', 'true');
       mapPlaceHolder.id = "map";
       self.map = new google.maps.Map(mapPlaceHolder, {
@@ -142,15 +142,23 @@ const fillRestaurantHTML = (restaurant = self.restaurant) => {
   const notFavorite = document.createElement('img');
   const favorite = document.createElement('img');
 
-  containerFavorite.className = 'container--favorite';
+  containerFavorite.tabIndex = 0;
+  containerFavorite.role = 'button';
   containerFavorite.id = restaurant.id;
+  containerFavorite.className = 'container--favorite';
   containerFavorite.addEventListener('click',
-    () => DBHelper.setFavorite(notFavorite, restaurant));
-  notFavorite.src = 'assets/img/svg/not-favorite.svg';
+    () => DBHelper.setFavorite(notFavorite, restaurant, containerFavorite, favorite));
+  containerFavorite.setAttribute('aria-label', restaurant.is_favorite === 'true' ? `unset ${restaurant.name} as favorite`:`set ${restaurant.name} as favorite`);
   notFavorite.id = 'not-favorite';
+  notFavorite.alt = 'unfavorite restaurant';
+  notFavorite.src = 'assets/img/svg/not-favorite.svg';
   notFavorite.className = restaurant.is_favorite === 'true' && 'hidden';
-  favorite.src = 'assets/img/svg/favorite.svg';
+  notFavorite.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'true':'false');
   favorite.id = 'favorite';
+  favorite.alt = 'favorite restaurant';
+  favorite.src = 'assets/img/svg/favorite.svg';
+  favorite.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'false' : 'true');
+
 
   containerFavorite.append(favorite);
   containerFavorite.append(notFavorite);
@@ -237,7 +245,7 @@ const fillReviewsHTML = (reviews = self.reviews) => {
     noReviews.innerHTML = 'No reviews yet!';
     return container.appendChild(noReviews);
   }
-  
+
   const ul = document.getElementById('reviews-list');
   reviews.forEach(review => {
     ul.appendChild(createReviewHTML(review));
@@ -278,11 +286,10 @@ const showForm = () => {
     const starInput = document.createElement('input');
     const starLabel = document.createElement('label');
     
-    starInput.type = 'radio';
-    starInput.id = `star${i}`;
+    starInput.type = 'radio visuallyHidden';
+    starInput.className = `star${i}`;
     starInput.name = 'rating';
     starInput.value = i;
-    starInput.class = 'visuallyHidden';
     starInput.required = true;
     starInput.addEventListener('input', Launch.isFormValid);
     
@@ -382,7 +389,7 @@ const createReviewHTML = (review) => {
   for (let i = 0; i < review.rating; i++) {
     const star = document.createElement('span');
     star.innerHTML += '★';
-    star.id = `star${i + 1}`
+    star.className = `star${i + 1}`
     stars.appendChild(star);
   }
   stars.setAttribute('aria-label', `${review.rating} stars on 5,`);
@@ -409,6 +416,7 @@ const fillBreadcrumb = (restaurant = self.restaurant) => {
   const li = document.createElement('li');
   li.innerHTML = ` ${restaurant.name}`;
   li.className = 'fontawesome-arrow-right';
+  li.tabIndex = 0;
   li.setAttribute('aria-current', 'page');
   breadcrumb.appendChild(li);
   Launch.fixedOnViewport(document.querySelector('nav'), document.querySelector('#breadcrumb'));

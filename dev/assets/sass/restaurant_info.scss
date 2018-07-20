@@ -761,21 +761,10 @@ nav {
         }
       }
     }
-    #star1 {
-      color: #ffa3a3;
+    .star1,.star2,.star3,.star4,.star5 {
+      color: $first-color;
     }
-    #star2 {
-      color:#ff7f7f;
-    }
-    #star3 {
-      color: #ff4747;
-    }
-    #star4 {
-      color:#d10000;
-    }
-    #star5 {
-      color: #b10000;
-    }
+  
     p {
       text-align: center;
       font-family: 'Montserrat', sans-serif;

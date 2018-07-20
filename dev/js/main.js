@@ -342,7 +342,7 @@ const createRestaurantHTML = (restaurant) => {
   note.innerHTML = `${restaurant.average_rating}`;
   note.setAttribute('aria-hidden', 'true');
   containerNote.append(note);
-  containerNote.id = 'container-note';
+  containerNote.className = 'container-note';
   containerNote.tabIndex = 0;
   containerNote.setAttribute('aria-label', `${restaurant.name} has a rate of ${restaurant.average_rating.replace('/5', ' on 5')}`)
 
@@ -353,12 +353,12 @@ const createRestaurantHTML = (restaurant) => {
   containerFavorite.addEventListener('click',
     () => DBHelper.setFavorite(notFavorite, restaurant, containerFavorite, favorite));
   notFavorite.src = 'assets/img/svg/not-favorite.svg';
-  notFavorite.id = 'not-favorite';
+  notFavorite.className = 'not-favorite';
   notFavorite.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'true':'false');
   notFavorite.alt = 'unfavorite restaurant';
   notFavorite.className = restaurant.is_favorite === 'true' && 'hidden';
   favorite.src = 'assets/img/svg/favorite.svg';
-  favorite.id = 'favorite';
+  favorite.className = 'favorite';
   favorite.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'false':'true');
   favorite.alt = 'favorite restaurant';
 
@@ -436,9 +436,9 @@ const addBannerToHomeScreen = () => {
   
   aside.className = 'popup';
   msg.className = 'popup msg';
-  msg.setAttribute('tabindex', '2');
+  msg.setAttribute('tabindex', '0');
   note.className = 'popup note';
-  note.setAttribute('tabindex', '1');
+  note.setAttribute('tabindex', '0');
   span.className = 'iconicfill-arrow-down';
   
   note.innerHTML = '(Tap to close)';

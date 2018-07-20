@@ -24,7 +24,13 @@ const
 
     const clonedTarget = target.cloneNode(true);
     clonedTarget.className = 'fixed exclude';
-
+    clonedTarget.id = "";
+    clonedTarget.setAttribute('aria-hidden', 'true');
+    clonedTarget.tabIndex = -1;
+    clonedTarget.children[0].children[0].setAttribute('aria-hidden', 'true');
+    clonedTarget.children[0].children[0].tabIndex = -1;
+    clonedTarget.children[1].setAttribute('aria-hidden', 'true');
+    clonedTarget.children[1].tabIndex = -1;
     target.appendChild(clonedTarget);
     
     if ('IntersectionObserver' in window) {
