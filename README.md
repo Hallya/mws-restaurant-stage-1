@@ -49,3 +49,23 @@ Lighthouse measures performance in five areas, but my review will focus on three
 1. Progressive Web App score should be at 90 or better.
 2. Performance score should be at 70 or better.
 3. Accessibility score should be at 90 or better.
+
+## Project Overview: Stage 3
+
+ In **Stage Three**, I took the connected application I built in **Stage One** and **Stage Two** and add additional functionalities. I added a form to allow users to create their own reviews. If the app is offline, the form will defer updating to the remote database until a connection is established. Finally, I worked to optimize the site to meet even stricter performance benchmarks than the previous project, and test again using Lighthouse.
+
+### Specification
+
+I was provided code for an updated Node development server and a README for getting the server up and running locally on my computer. The README will also contain the API I needed to make JSON requests to the server. Once I had the server up, I began the work of improving the Stage Two project code.
+
+### Requirements
+
+I added a form to allow users to create their own reviews: In previous versions of the application, users could only read reviews from the database. I needed to add a form that adds new reviews to the database. The form include the user’s name, the restaurant id, the user’s rating, and whatever comments they have. Submitting the form update the server when the user is online.
+
+I added functionality to defer updates until the user is connected: If the user is not online, the app notify the user that they are not connected, and save the user's data to submit automatically when re-connected. In this case, the review is deferred and sent to the server when connection is re-established (but the review is visible locally even before it gets to the server.)
+
+I met the new performance requirements: In addition to adding new features, the performance targets you met in Stage Two have tightened. Using Lighthouse, I needed to measure the site performance against the new targets.
+
+1. Progressive Web App score should be at 90 or better.
+2. Performance score should be at 90 or better.
+3. Accessibility score should be at 90 or better.
