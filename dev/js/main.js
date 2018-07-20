@@ -69,7 +69,7 @@ window.addEventListener('load', () => {
  */
 document.onkeypress = function (e) {
   if (e.charCode === 13 && filterOptions.classList.contains('optionsOpen')) {
-    closeMenu();
+    launch.toggleMenu();
     listOfRestaurants.setAttribute('tabindex', '-1');
     listOfRestaurants.focus();
     document.getElementById('skip').click();
@@ -345,13 +345,19 @@ const createRestaurantHTML = (restaurant) => {
 
   containerFavorite.className = 'container--favorite';
   containerFavorite.id = restaurant.id;
+  containerFavorite.role = 'button';
+  containerFavorite.setAttribute('aria-label', restaurant.is_favorite === 'true' ? 'unset this restaurant as favorite':'set this restaurant as favorite');
   containerFavorite.addEventListener('click',
-    () => DBHelper.setFavorite(notFavorite, restaurant));
+    () => DBHelper.setFavorite(notFavorite, restaurant, containerFavorite, favorite));
   notFavorite.src = 'assets/img/svg/not-favorite.svg';
   notFavorite.id = 'not-favorite';
+  notFavorite.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'true':'false');
+  notFavorite.alt = 'unfavorite restaurant';
   notFavorite.className = restaurant.is_favorite === 'true' && 'hidden';
   favorite.src = 'assets/img/svg/favorite.svg';
   favorite.id = 'favorite';
+  favorite.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'false':'true');
+  favorite.alt = 'favorite restaurant';
 
   containerFavorite.append(favorite);
   containerFavorite.append(notFavorite);

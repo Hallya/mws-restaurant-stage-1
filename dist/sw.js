@@ -239,10 +239,13 @@ const DBHelper = {
     location.reload();
   },
 
-  setFavorite: async (target, restaurant) => {
+  setFavorite: async (target, restaurant, button, secondTarget) => {
     target.classList.toggle('hidden');
     const favorite = restaurant.is_favorite === 'true'? 'false' : 'true';
     const store = 'restaurants';
+    button.setAttribute('aria-label', target.classList.contains('hidden') ? 'unset this restaurant as favorite':'set this restaurant as favorite');
+    target.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'true':'false');
+    secondTarget.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'false':'true');
     restaurant.is_favorite = favorite;
     await idbKey.set(store, restaurant);
     return await DBHelper.DATABASE_URL.PUT.favoriteRestaurant(restaurant.id, favorite);

@@ -56,21 +56,21 @@
       <label id="filtersSettings" hidden>Filter settings</label>
     </nav>
     <aside class="filter-options" role="menu" aria-hidden="true">
-      <h3 id="filters" aria-label="filter results"></h3>
+      <h3 id="filters" aria-label="filters menu"></h3>
       <label id="location" hidden>Choose your location</label>
-      <select id="neighborhoods-select" aria-labelledby="location" name="neighborhoods">
+      <select id="neighborhoods-select" hidden aria-labelledby="location" name="neighborhoods">
         <option value="all" role="option" aria-setsize="4" aria-posinset="1">All Neighborhoods</option>
       </select>
       <label id="cuisines" hidden>Choose your type of food</label>
-      <select id="cuisines-select" aria-labelledby="cuisines" name="cuisines">
+      <select id="cuisines-select" hidden aria-labelledby="cuisines" name="cuisines">
         <option value="all" role="option" aria-setsize="4" aria-posinset="1">All Cuisines</option>
       </select>
-      <label id="sort" hidden>Choose your type of food</label>
-      <select id="sort-select" aria-labelledby="sort" name="sort">
+      <label id="sort" hidden>Sort restaurants</label>
+      <select id="sort-select" hidden aria-labelledby="sort" name="sort">
         <option value="Relevance" role="option" aria-setsize="4" aria-posinset="1">Relevant</option>
       </select>
       <label id="favorites" >
-        <input aria-labelledby="favorites" role="checkbox" type="checkbox">
+        <input aria-labelledby="favorites" hidden role="checkbox" type="checkbox">
           Favorites
         </input>
       </label>
@@ -78,7 +78,7 @@
   </header>
 
   <main id="maincontent">
-    <a id="skip" href="#list-container" aria-label="Skip to the list of restaurant" role="link"></a>
+    <a id="skip" href="#restaurants-list" aria-label="Skip to the list of restaurant" role="link"></a>
 
     <section id="map-container" aria-label="map" role="application">
       <aside id="map-loader">
