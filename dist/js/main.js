@@ -445,12 +445,12 @@ const launch = {
    * Sort restaurants by there notes on main page.
    */
   sortByNote: (a, b) => {
-    const aNote = launch.getAverageNote(a.reviews)
-    const bNote = launch.getAverageNote(b.reviews)
-    if (bNote > aNote) {
+    const aNote = Number(a.average_rating.replace('/5', ''));
+    const bNote = Number(b.average_rating.replace('/5', ''));
+    if (aNote < bNote) {
       return 1
     }
-    if (bNote < aNote) {
+    if (aNote > bNote) {
       return -1
     }
     return 0;
@@ -911,7 +911,9 @@ const createRestaurantHTML = (restaurant) => {
   image.alt = `${restaurant.name}'s restaurant`;
   image.type = 'image/jpeg';
   
-  note.innerHTML = `${restaurant.average_rating || launch.getAverageNote(restaurant.id)}`;
+  restaurant.average_rating = launch.getAverageNote(restaurant.id);
+
+  note.innerHTML = `${restaurant.average_rating}`;
   containerNote.append(note);
   containerNote.id = 'container-note';
 

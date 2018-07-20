@@ -175,12 +175,12 @@ const launch = {
    * Sort restaurants by there notes on main page.
    */
   sortByNote: (a, b) => {
-    const aNote = launch.getAverageNote(a.reviews)
-    const bNote = launch.getAverageNote(b.reviews)
-    if (bNote > aNote) {
+    const aNote = Number(a.average_rating.replace('/5', ''));
+    const bNote = Number(b.average_rating.replace('/5', ''));
+    if (aNote < bNote) {
       return 1
     }
-    if (bNote < aNote) {
+    if (aNote > bNote) {
       return -1
     }
     return 0;

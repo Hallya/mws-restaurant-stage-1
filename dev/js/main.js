@@ -337,7 +337,9 @@ const createRestaurantHTML = (restaurant) => {
   image.alt = `${restaurant.name}'s restaurant`;
   image.type = 'image/jpeg';
   
-  note.innerHTML = `${restaurant.average_rating || launch.getAverageNote(restaurant.id)}`;
+  restaurant.average_rating = launch.getAverageNote(restaurant.id);
+
+  note.innerHTML = `${restaurant.average_rating}`;
   containerNote.append(note);
   containerNote.id = 'container-note';
 
