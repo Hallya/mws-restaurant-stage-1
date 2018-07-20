@@ -4,8 +4,7 @@ const window = (typeof self === 'object' && self.self === self && self) ||
 const idbKey = require('./js/indexedb');
 const DBHelper = require('./js/dbhelper');
 
-const requestFetched = [];
-const version = 7;
+const version = 1;
 /**
  * Object containing different cache names.
  */
@@ -158,7 +157,7 @@ async function getFromCacheOrFetch(cache_id, request) {
 /**
  * Function called on "post-review" tag event, it will try to post reviews to server.
  */
-async function postLocalReviews() {
+async function postLocalReviews(count = 0) {
   const store = 'posts';
   const reviews = await idbKey.getAll(store).catch(err => console.error(err));
   
@@ -174,8 +173,11 @@ async function postLocalReviews() {
           return response;
         })
         .catch(error => {
-          self.registration.showNotification("Your review will be posted later");
-          console.error('Review not posted',error);
+          if (count === 0) {
+            self.registration.showNotification("Your review will be posted later");
+          }
+          console.error('Review not posted', error);
+          setTimeout(() => postLocalReviews(1), 10000);
         })
     }))
 }
@@ -190,6 +192,9 @@ const fetchLastReviews = async () => {
   reviews.forEach(review => idbKey.set(store, review))
 }
 
+/**
+ * Function triggered by sync registration.
+ */
 self.addEventListener('sync', function (event) {
   if (event.tag === 'post-review') {
     event.waitUntil(postLocalReviews());

@@ -211,11 +211,6 @@ const fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hour
  */
 const fillReviewsHTML = (reviews = self.reviews) => {
   const container = document.getElementById('reviews-container');
-  if (!reviews) {
-    const noReviews = document.createElement('p');
-    noReviews.innerHTML = 'No reviews yet!';
-    return container.appendChild(noReviews);
-  }
   const titleContainer = document.createElement('div');
   const title = document.createElement('h3');
   const addReview = document.createElement('button');
@@ -237,6 +232,12 @@ const fillReviewsHTML = (reviews = self.reviews) => {
 
   container.appendChild(titleContainer);
 
+  if (!reviews) {
+    const noReviews = document.createElement('p');
+    noReviews.innerHTML = 'No reviews yet!';
+    return container.appendChild(noReviews);
+  }
+  
   const ul = document.getElementById('reviews-list');
   reviews.forEach(review => {
     ul.appendChild(createReviewHTML(review));

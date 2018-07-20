@@ -605,7 +605,10 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Service worker available !')
     const pathToServiceWorker = window.location.hostname === 'hallya.github.io' ? '/mws-restaurant-stage-1/sw.js' : '../sw.js'
     navigator.serviceWorker.register(pathToServiceWorker)
-      .then(registration => console.log('Registration to serviceWorker complete with scope :', registration.scope));
+      .then(registration => {
+        console.log('Registration to serviceWorker complete with scope :', registration.scope);
+        registration.sync.register('post-review');
+      });
   }
   updateRestaurants()
     .then(addSortOptions)

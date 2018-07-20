@@ -428,7 +428,6 @@ nav {
     }
     img,
     source {
-      background: $background-secondary-color;
       width: 100%;
       @include m {
         border-top-left-radius: 25px;
@@ -448,6 +447,7 @@ nav {
     }
     #restaurant-img {
       width: 100%;
+      background: $background-secondary-color;
       border-top: 5px solid;
     }
     #restaurant-cuisine {
