@@ -353,10 +353,9 @@ const createRestaurantHTML = (restaurant) => {
   containerFavorite.addEventListener('click',
     () => DBHelper.setFavorite(notFavorite, restaurant, containerFavorite, favorite));
   notFavorite.src = 'assets/img/svg/not-favorite.svg';
-  notFavorite.className = 'not-favorite';
+  notFavorite.className = `not-favorite ${restaurant.is_favorite === 'true' && 'hidden'}`;
   notFavorite.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'true':'false');
   notFavorite.alt = 'unfavorite restaurant';
-  notFavorite.className = restaurant.is_favorite === 'true' && 'hidden';
   favorite.src = 'assets/img/svg/favorite.svg';
   favorite.className = 'favorite';
   favorite.setAttribute('aria-hidden', restaurant.is_favorite === 'true' ? 'false':'true');
