@@ -27,7 +27,7 @@ gulp.task('default', ['styles', 'copy-html', 'scripts', 'copy-manifest'],() => {
   connect.server({
     root: 'dist',
     livereload: true,
-    port: 7070
+    port: 9090
   })
 });
 
@@ -39,7 +39,7 @@ gulp.task('build', ['styles', 'copy-html', 'scripts-dist', 'copy-manifest'], () 
   connect.server({
     root: 'dist',
     livereload: true,
-    port: 7070
+    port: 9090
   })
 });
 
