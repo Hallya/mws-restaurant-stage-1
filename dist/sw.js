@@ -63,7 +63,7 @@ const DBHelper = {
         })
         .then(restaurants => {
           restaurants.forEach(restaurant => {
-            restaurant.is_favorite = restaurant.is_favorite.toString();
+            restaurant.is_favorite = restaurant.is_favorite && restaurant.is_favorite.toString();
             idbKey.set(store, restaurant);
           });
           return restaurants;
@@ -361,7 +361,7 @@ const window = (typeof self === 'object' && self.self === self && self) ||
 const idbKey = require('./js/indexedb');
 const DBHelper = require('./js/dbhelper');
 
-const version = 1;
+const version = 2;
 /**
  * Object containing different cache names.
  */
@@ -487,7 +487,7 @@ self.addEventListener('fetch', event => {
  * Handle any error and return default image if request for webp or jpg fails.
  */
 async function handleError(error, { url }) {
-  console.error(error);
+  console.error('ERROR handled by SW:',error);
   if (url.match(/\.(jpe?g|webp)$/i)) {
     const cache = await caches.open(CURRENT_CACHES.CACHE_STATIC);
     return cache.match('assets/img/svg/no-wifi.svg');

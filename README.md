@@ -1,5 +1,15 @@
 # Mobile Web Specialist Certification Course
 ---
+
+#### Installation
+
+Run in your terminal:
+1. `git clone https://github.com/hallya/mws-restaurant-stage-1.git`
+2. `cd mws-restaurant-stage-1`
+3. `npm i`
+4. `npm start`
+You are all set !
+---
 #### _Three Stage Course Material Project - Restaurant Reviews_
 
 ### Main purpose
