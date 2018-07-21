@@ -9,18 +9,22 @@ const mapLoader = document.getElementById('map-loader');
 /**
  * Try to register to service worker.
  */
-window.addEventListener('load', () => {
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+window.addEventListener('DOMContentLoaded', async () => {
+  if ('serviceWorker' in navigator) {
     const pathToServiceWorker = window.location.hostname === 'hallya.github.io' ? '/mws-restaurant-stage-1/sw.js' : '../sw.js'
-    navigator.serviceWorker.register(pathToServiceWorker)
-      .then(registration => {
-        registration.sync.register('post-review');
-        registration.sync.register('fetch-new-reviews');
-        console.log('Registered to SW & "post-review" sync tag & "fetch-new-reviews" tag')
-      });
+    const registration = await navigator.serviceWorker.register(pathToServiceWorker).catch(error => console.error('Couldn\'t register to SW'))
+    console.log('Registration to SW succeed with scope', registration.scope);
   }
-});
+})
 
+window.addEventListener('load', async () => {
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    const registration = await navigator.serviceWorker.ready.catch(error => console.error('Couldn\'t get registration object from SW'))
+    registration.sync.register('post-review');
+    registration.sync.register('fetch-new-reviews');
+    console.log('Registered to SW & "post-review" sync tag & "fetch-new-reviews" tag')
+  }
+})
 /**
  * Initialize Google map, called from HTML.
  */

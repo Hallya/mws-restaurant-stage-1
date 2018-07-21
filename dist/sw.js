@@ -551,7 +551,8 @@ async function postLocalReviews(count = 0) {
  * Function called on "fetch-new-reviews" tag event, it will add or update new reviews.
  */
 const fetchLastReviews = async () => {
-  const response = await DBHelper.DATABASE_URL.GET.restaurantReviews(location.search.match(/\d+/)[0]);
+  const clients = await self.clients.matchAll();
+  const response = await DBHelper.DATABASE_URL.GET.restaurantReviews(clients[0].url.match(/\d+/)[0]);
   const reviews = await response.json(),
     store = 'reviews';
   reviews.forEach(review => idbKey.set(store, review))
