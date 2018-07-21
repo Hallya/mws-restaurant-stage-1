@@ -62,7 +62,7 @@ const DBHelper = {
         })
         .then(restaurants => {
           restaurants.forEach(restaurant => {
-            restaurant.is_favorite = restaurant.is_favorite.toString();
+            restaurant.is_favorite = restaurant.is_favorite && restaurant.is_favorite.toString();
             idbKey.set(store, restaurant);
           });
           return restaurants;
