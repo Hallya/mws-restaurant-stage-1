@@ -58,12 +58,12 @@ gulp.task('scripts', (done) => {
   
 gulp.task('scripts-dist', (done) => {
   gulp.src(['./dev/js/main.js', './dev/js/restaurant_info.js'])  
-    .pipe(browserify())
     .pipe(uglify())
+    .pipe(browserify())
     .pipe(gulp.dest('./dist/js'));
   gulp.src('./dev/sw.js')
-    .pipe(browserify())
     .pipe(uglify())
+    .pipe(browserify())
     .pipe(gulp.dest('./dist'));
   connect.reload();
   done();
