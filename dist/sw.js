@@ -361,7 +361,7 @@ const window = (typeof self === 'object' && self.self === self && self) ||
 const idbKey = require('./js/indexedb');
 const DBHelper = require('./js/dbhelper');
 
-const version = 2;
+const version = 1;
 /**
  * Object containing different cache names.
  */
@@ -375,30 +375,34 @@ const CURRENT_CACHES = {
  * List of files to add put in cache immediately at first connexion.
  */
 const URLS_TO_CACHE = [
-  'index.html',
+  '/',
   'manifest.webmanifest',
+  'index.html',
   'restaurant.html',
+  'sw.js',
+  'js/main.js',
+  'js/restaurant_info.js',
+  'assets/css/index.css',
+  'assets/css/restaurant_info.css',
   'assets/css/fonts/iconicfill.woff2',
   'assets/css/fonts/fontawesome.woff2',
   'assets/img/svg/puff.svg',
+  'assets/img/svg/map-loader.svg',
+  'assets/img/svg/marker.svg',
   'assets/img/svg/no-wifi.svg',
-  'assets/img/svg/not-favorite.svg',
   'assets/img/svg/favorite.svg',
+  'assets/img/svg/not-favorite.svg',
+  'assets/img/png/logo-64.png',
+  'assets/img/png/logo-128.png',
+  'assets/img/png/logo-256.png',
+  'assets/img/png/logo-512.png',
   'assets/img/png/launchScreen-ipad-9.7.png',
   'assets/img/png/launchScreen-ipadpro-10.5.png',
   'assets/img/png/launchScreen-ipadpro-12.9.png',
   'assets/img/png/launchScreen-iphone-8.png',
   'assets/img/png/launchScreen-iphone-8plus.png',
   'assets/img/png/launchScreen-iphone-x.png',
-  'assets/img/png/launchScreen-iphone-se.png',
-  'assets/img/png/logo-64.png',
-  'assets/img/png/logo-128.png',
-  'assets/img/png/logo-256.png',
-  'assets/img/png/logo-512.png',
-  'assets/css/index.css',
-  'assets/css/restaurant_info.css',
-  'js/main.js',
-  'js/restaurant_info.js'
+  'assets/img/png/launchScreen-iphone-se.png'
 ];
 
 /**
@@ -413,8 +417,8 @@ self.addEventListener('install', event => {
       .then(cache => cache.addAll(URLS_TO_CACHE))
       .then(() => {
         console.log('SW - All resources cached.');
-        self.skipWaiting(),
         console.log('SW - SW version skipped.');
+        return self.skipWaiting();
       })
       .catch(error => console.error('SW - Open cache failed :', error))
   );
@@ -439,6 +443,7 @@ self.addEventListener('activate', event => {
       ))
       .then(() => {
         console.log(`SW - "${CURRENT_CACHES.CACHE_STATIC}" now ready to handle fetches!`);
+        return self.clients.claim();
       })
   );
 
@@ -486,9 +491,12 @@ self.addEventListener('fetch', event => {
 /**
  * Handle any error and return default image if request for webp or jpg fails.
  */
-async function handleError(error, { url }) {
-  console.error('ERROR handled by SW:',error);
-  if (url.match(/\.(jpe?g|webp)$/i)) {
+async function handleError(error, request) {
+  console.error('ERROR handled by SW:', error);
+  if (request.url.match(/undefined/) && request.format === 'image') {
+    console.log(url);
+  }
+  if (request.url.match(/\.(jpe?g|webp)$/i)) {
     const cache = await caches.open(CURRENT_CACHES.CACHE_STATIC);
     return cache.match('assets/img/svg/no-wifi.svg');
   }

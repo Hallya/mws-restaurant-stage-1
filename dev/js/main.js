@@ -25,16 +25,16 @@ const
 /**
  * Try to register to service worker and fetch restaurants depending of filters as soon as the DOM is loaded.
  */
-document.addEventListener('DOMContentLoaded', () => {
-
+document.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
     console.log('Service worker available !')
     const pathToServiceWorker = window.location.hostname === 'hallya.github.io' ? '/mws-restaurant-stage-1/sw.js' : '../sw.js'
-    navigator.serviceWorker.register(pathToServiceWorker)
-      .then(registration => {
-        console.log('Registration to serviceWorker complete with scope :', registration.scope);
-        registration.sync.register('post-review');
-      });
+    await navigator.serviceWorker.register(pathToServiceWorker)
+      .then(registration => console.log('Registration to serviceWorker complete with scope :', registration.scope))
+      .catch(error => console.error(error));
+    await navigator.serviceWorker.ready
+      .then(registration => registration.sync.register('post-review'))
+      .catch(error => console.error(error));
   }
   updateRestaurants()
     .then(addSortOptions)
@@ -47,8 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
  * Add event listeners to filters features.
  */
 window.addEventListener('load', () => {
-  
-
   if (!window.navigator.standalone
     && window.navigator.userAgent.indexOf('Android') === -1
     && window.navigator.userAgent.indexOf('Linux') === -1
