@@ -17,6 +17,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 })
 
+/**
+ * Try to register to tag events.
+ */
 window.addEventListener('load', async () => {
   if ('serviceWorker' in navigator && 'SyncManager' in window) {
     const registration = await navigator.serviceWorker.ready.catch(error => console.error('Couldn\'t get registration object from SW'))
@@ -25,6 +28,7 @@ window.addEventListener('load', async () => {
     console.log('Registered to SW & "post-review" sync tag & "fetch-new-reviews" tag')
   }
 })
+
 /**
  * Initialize Google map, called from HTML.
  */
@@ -146,7 +150,6 @@ const fillRestaurantHTML = (restaurant = self.restaurant) => {
   const notFavorite = document.createElement('img');
   const favorite = document.createElement('img');
 
-  containerFavorite.tabIndex = 0;
   containerFavorite.role = 'button';
   containerFavorite.id = restaurant.id;
   containerFavorite.className = 'container--favorite';
@@ -266,7 +269,7 @@ const showForm = () => {
   const labelNameInput = document.createElement('label');
   const nameInput = document.createElement('input');
   const ratingFieldset = document.createElement('fieldset');
-  const appreciation = ['excellent', 'good', 'ok', 'bad', 'awful'];
+  const appreciation = ['awful', 'bad', 'ok', 'good', 'excellent'];
   
   form.autocomplete = 'on';
 
@@ -290,15 +293,16 @@ const showForm = () => {
     const starInput = document.createElement('input');
     const starLabel = document.createElement('label');
     
-    starInput.type = 'radio visuallyHidden';
-    starInput.className = `star${i}`;
+    starInput.type = 'radio';
+    starInput.id = `star${i}`;
+    starInput.setAttribute('aria-label', `It was ${appreciation[i - 1]}`);
     starInput.name = 'rating';
+    starInput.value = i;
     starInput.value = i;
     starInput.required = true;
     starInput.addEventListener('input', Launch.isFormValid);
     
-    starLabel.setAttribute('for', `star${i}`);
-    starLabel.title = 'It was', appreciation[i - 1];
+    starLabel.for = `star${i}`;
     
 
     ratingFieldset.appendChild(starInput);
@@ -317,6 +321,7 @@ const showForm = () => {
   commentsInput.minLength = 3;
   commentsInput.maxLength = 5000;
   commentsInput.placeholder = 'Your comment';
+  commentsInput.setAttribute('aria-label', `Type your comments about your experience`)
   commentsInput.addEventListener('keydown', autosize);
 
   
@@ -407,7 +412,8 @@ const createReviewHTML = (review) => {
   li.appendChild(comments);
 
   li.setAttribute('role', 'listitem');
-  li.setAttribute('aria-setsize', self.reviews);
+  li.tabIndex = 0;
+  li.setAttribute('aria-setsize', self.reviews.length);
   li.setAttribute('aria-posinset', self.reviews.indexOf(review)+1);
   return li;
 };

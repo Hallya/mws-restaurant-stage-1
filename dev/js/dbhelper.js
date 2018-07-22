@@ -2,7 +2,7 @@ const idbKey = require('./indexedb');
 
 const scheme = 'http://',
   host = 'localhost',
-  port = ':1337',
+  port = ':3000',
   path = {
     restaurants: '/restaurants/',
     reviews: '/reviews/'
