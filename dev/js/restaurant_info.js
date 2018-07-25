@@ -21,66 +21,83 @@ window.addEventListener('DOMContentLoaded', async () => {
  * Try to register to tag events.
  */
 window.addEventListener('load', async () => {
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+  if ('serviceWorker' in navigator) {
     const registration = await navigator.serviceWorker.ready.catch(error => console.error('Couldn\'t get registration object from SW'))
     registration.sync.register('post-review');
     registration.sync.register('fetch-new-reviews');
     console.log('Registered to SW & "post-review" sync tag & "fetch-new-reviews" tag')
+    const result = await Notification.requestPermission();
+    switch (result) {
+      case 'denied':
+        return console.log('Permission wasn\'t granted. Allow a retry.');
+        break;
+      case 'default':
+        return console.log('The permission request was dismissed.');
+        break;
+      case 'granted':
+        return console.log('Notification allowed');
+        break;
+      default:
+        return;
+    }
   }
 })
 
 /**
  * Initialize Google map, called from HTML.
  */
-window.initMap = () => {
-  fetchRestaurantFromURL()
-    .then(restaurant => {
-      const mapPlaceHolder = document.createElement('div');
-      mapPlaceHolder.setAttribute('aria-hidden', 'true');
-      mapPlaceHolder.setAttribute('aria-hidden', 'true');
-      mapPlaceHolder.id = "map";
-      self.map = new google.maps.Map(mapPlaceHolder, {
-        zoom: 16,
-        center: {
-          lat: restaurant.latlng.lat,
-          lng: restaurant.latlng.lng
-        },
-        streetViewControl: false,
-        zoomControl: true,
-        fullscreenControl: true,
-        mapTypeId: 'roadmap',
-        mapTypeControl: false,
-      })
-      document.getElementById('map-container').appendChild(mapPlaceHolder);
-      self.map.addListener('tilesloaded', function () {
-          mapLoader.classList.toggle('hidden');
-      });
-      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
-      fillBreadcrumb();
-    })
-    .then(Launch.lazyLoading)
-    .catch(error => console.error(error));
+window.initMap = async () => {
+  const restaurant = await fetchRestaurantFromURL().catch(error => console.error(error));
+  const mapPlaceHolder = document.createElement('div');
+
+  mapPlaceHolder.setAttribute('aria-hidden', 'true');
+  mapPlaceHolder.setAttribute('aria-hidden', 'true');
+  mapPlaceHolder.id = "map";
+
+  self.map = new google.maps.Map(mapPlaceHolder, {
+    zoom: 16,
+    center: {
+      lat: restaurant.latlng.lat,
+      lng: restaurant.latlng.lng
+    },
+    streetViewControl: false,
+    zoomControl: true,
+    fullscreenControl: true,
+    mapTypeId: 'roadmap',
+    mapTypeControl: false,
+  })
+
+  document.getElementById('map-container').appendChild(mapPlaceHolder);
+  self.map.addListener('tilesloaded', function () {
+      mapLoader.classList.toggle('hidden');
+  });
+  DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
+  fillBreadcrumb();
+  Launch.lazyLoading()
 };
 
 /**
  * Get restaurant from id in URL.
  */
-const fetchRestaurantFromURL = () => {
+const fetchRestaurantFromURL = async () => {
   if (self.restaurant) { // restaurant already fetched!
-    console.log('- Restaurant already fetch');
     return;
   }
   const id = getParameterByName('id');
+
   if (!id) { // no id found in URL
     return console.error('No restaurant id in URL');
   }
-  return Promise.all([DBHelper.fetchRestaurantById(id), DBHelper.fetchRestaurantReviews(id)])
-    .then(results => {
-      self.reviews = results[1] && results[1].reverse();
-      return self.restaurant = results[0];
-    })
-    .then(fillRestaurantHTML)
-    .catch(error => console.error(error));
+  
+  const results = await Promise.all([
+    DBHelper.fetchRestaurantById(id),
+    DBHelper.fetchRestaurantReviews(id)
+  ]).catch(error => console.error(error));
+
+  self.reviews = results[1] && results[1].reverse();
+  self.restaurant = results[0];
+
+  return fillRestaurantHTML();
 };
 
 /**
@@ -386,7 +403,7 @@ const createReviewHTML = (review) => {
 
   const date = document.createElement('p');
   date.className = 'dateReview';
-  const convertDate = new Date(review.updatedAt);
+  const convertDate = new Date(Number(review.updatedAt));
   date.innerHTML = convertDate.toDateString();
   date.setAttribute('aria-label', `${date.innerHTML},`);
   li.appendChild(date);

@@ -29,18 +29,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
     console.log('Service worker available !')
     const pathToServiceWorker = window.location.hostname === 'hallya.github.io' ? '/mws-restaurant-stage-1/sw.js' : '../sw.js'
-    await navigator.serviceWorker.register(pathToServiceWorker)
-      .then(registration => console.log('Registration to serviceWorker complete with scope :', registration.scope))
-      .catch(error => console.error(error));
-    await navigator.serviceWorker.ready
-      .then(registration => registration.sync.register('post-review'))
-      .catch(error => console.error(error));
+    const registration = await navigator.serviceWorker.register(pathToServiceWorker).catch(error => console.error(error));
+
+    console.log('Registration to serviceWorker complete with scope :', registration.scope)
+    const isReady = await navigator.serviceWorker.ready.catch(error => console.error(error));
+    isReady.sync.register('post-review');
   }
-  updateRestaurants()
-    .then(addSortOptions)
-    .then(addCuisinesOptions)
-    .then(addNeighborhoodsOptions)
-    .catch(error => console.error(error));
+  await updateRestaurants().catch(error => console.error(error));
+  await Promise.all([
+    addSortOptions(),
+    addCuisinesOptions(),
+    addNeighborhoodsOptions()
+  ]).catch(error => console.error(error));
 });
 
 /**
@@ -159,13 +159,13 @@ window.initMap = () => {
  * Update list of restaurant depending on filters.
  */
 const updateRestaurants = async () => {
-  const cSelect = cuisinesSelect;
-  const nSelect = neighborhoodsSelect;
-  const sSelect = sortSelect;
+  const cSelect = cuisinesSelect,
+    nSelect = neighborhoodsSelect,
+    sSelect = sortSelect,
 
-  const cIndex = cSelect.selectedIndex;
-  const nIndex = nSelect.selectedIndex;
-  const sIndex = sSelect.selectedIndex;
+  cIndex = cSelect.selectedIndex,
+  nIndex = nSelect.selectedIndex,
+  sIndex = sSelect.selectedIndex;
 
   if (cuisine === cSelect[cIndex].value
     && neighborhood === nSelect[nIndex].value
@@ -174,32 +174,30 @@ const updateRestaurants = async () => {
     
     return Promise.resolve();
   }
+  
   cuisine = cSelect[cIndex].value;
   neighborhood = nSelect[nIndex].value;
   sort = sSelect[sIndex].value;
   favorites = favoritesCheckbox.checked;
   
-  return Promise.all([
+  const results = await Promise.all([
     DBHelper.fetchReviews(),
     DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood)
-  ])
-    .then(results => {
-      self.reviews = results[0];
-      self.restaurants = results[1];
-      return results[1];
-    })
-    .then(resetRestaurants)
-    .then(sortRestaurantsBy)
-    .then(getFavorites)
-    .then(generateRestaurantsHTML)
-    .then(() => console.log('- Restaurants list updated !'))
-    .catch(error => console.error(error))
+  ]).catch(error => console.error(error))
+
+  self.reviews = results[0];
+  self.restaurants = results[1];
+
+  await resetRestaurants();
+  await sortRestaurantsBy();
+  await generateRestaurantsHTML(getFavorites());
+  console.log('- Restaurants list updated !');
 };
 
 /**
  * Clear current restaurants, their HTML and remove their map markers.
  */
-const resetRestaurants = (restaurants) => {
+const resetRestaurants = (restaurants = self.restaurants) => {
   // Remove all restaurants
   self.restaurants = [];
   const ul = document.getElementById('restaurants-list');

@@ -113,11 +113,12 @@ self.addEventListener('fetch', event => {
         event.respondWith(getFromCacheOrFetch(CURRENT_CACHES.CACHE_STATIC, newPath));
       }
 
-      else if (url.pathname.startsWith('/restaurants') || url.pathname.startsWith('/reviews')) {
-        event.respondWith(fetch(event.request));
-      }
-      else if (event.request.method !== 'GET') {
-        event.respondWith(fetch(event.request))
+      else if (
+        url.pathname.startsWith('/restaurants')
+        || url.pathname.startsWith('/reviews')
+        || event.request.method !== 'GET') {
+        
+        event.respondWith( fetch(event.request) );
       }
       else {
         event.respondWith(getFromCacheOrFetch(CURRENT_CACHES.CACHE_STATIC, event.request))
@@ -143,20 +144,22 @@ async function handleError(error, request) {
     const cache = await caches.open(CURRENT_CACHES.CACHE_STATIC);
     return cache.match('assets/img/svg/no-wifi.svg');
   }
+  if (request.url.match(/reviews\/\?restaurant_id=$/)) {
+    return console.log('couocu');
+  }
 }
 
 /**
- * The function name speak for itself ;).
+ * The function name speaks for itself ;).
  */
 async function getFromCacheOrFetch(cache_id, request) {
   const cache = await caches.open(cache_id);
   const match = await cache.match(request);
 
-  if (match) {
-    return match;
-  }
+  if (match) return match;
+
   const response = await fetch(request).catch((e) =>  handleError(e, request));
-  if (!response.url.match(/no-wifi.svg$/i)) {
+  if (!response.url.match(/no-wifi.svg$/)) {
     cache.put(request, response.clone());
   }
   return response;
