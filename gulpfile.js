@@ -2,17 +2,11 @@
 
 const gulp = require('gulp');
 const browserify = require('gulp-bro');
-let uglify = require('gulp-uglify-es').default;
+const uglify = require('gulp-uglify-es').default;
 const connect = require('gulp-connect');
 const htmlmin = require('gulp-htmlmin');
-const babelify = require('babelify');
 const sass = require('gulp-sass');
 const autoprefixer = require('gulp-autoprefixer');
-const browserSync = require('browser-sync').create();
-// const uglify = require('gulp-uglify');
-const gutil = require('gulp-util');
-const babel = require('gulp-babel');
-const sourcemaps = require('gulp-sourcemaps');
 const responsive = require('gulp-responsive');
 const imagemin = require('gulp-imagemin');
 const webp = require('gulp-webp');
@@ -36,10 +30,11 @@ gulp.task('build', ['styles', 'copy-html', 'scripts-dist', 'copy-manifest'], () 
   gulp.watch(['dev/*.html'], ['copy-html']);
   gulp.watch(['dev/js/**/*.js', 'dev/sw.js'], ['scripts-dist']);
   gulp.watch('dev/manifest.json', ['copy-manifest']);
+
   connect.server({
     root: 'dist',
     livereload: true,
-    port: 9090
+    port: 9090,
   })
 });
 
@@ -58,12 +53,12 @@ gulp.task('scripts', (done) => {
   
 gulp.task('scripts-dist', (done) => {
   gulp.src(['./dev/js/main.js', './dev/js/restaurant_info.js'])  
-    .pipe(uglify())
     .pipe(browserify())
+    .pipe(uglify())
     .pipe(gulp.dest('./dist/js'));
   gulp.src('./dev/sw.js')
-    .pipe(uglify())
     .pipe(browserify())
+    .pipe(uglify())
     .pipe(gulp.dest('./dist'));
   connect.reload();
   done();

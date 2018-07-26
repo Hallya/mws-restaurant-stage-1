@@ -209,8 +209,11 @@ const DBHelper = {
     // Store the object containing form's information in indexedDB but with other reviews this time.
     await idbKey.addReview('reviews', body);
     // Triggers a sync event with tag "post-review".
+    console.log(navigator.serviceWorker.ready);
     const registration = await navigator.serviceWorker.ready
-    await registration.sync.register('post-review');
+    await registration.sync.register({
+      id: 'post-review'
+    });
     // Reload the page to update reviews displayed.
     location.reload();
   },

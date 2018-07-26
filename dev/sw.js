@@ -4,7 +4,7 @@ const window = (typeof self === 'object' && self.self === self && self) ||
 const idbKey = require('./js/indexedb');
 const DBHelper = require('./js/dbhelper');
 
-const version = 3;
+const version = 1;
 /**
  * Object containing different cache names.
  */
@@ -171,26 +171,25 @@ async function getFromCacheOrFetch(cache_id, request) {
 async function postLocalReviews(count = 0) {
   const store = 'posts';
   const reviews = await idbKey.getAll(store).catch(err => console.error(err));
-  
+  console.log('postLocalReviews triggered');
   return await Promise.all(reviews
-    .map(review => {
-      return DBHelper.DATABASE_URL.POST.newReview(review)
-        .then(response => {
-          console.log('Response after post request', response,'\nStatus :',response.status)
-          if (response.status === 201) {
-            self.registration.showNotification("Review synchronised to server")
-              .then(() => idbKey.delete(store, review.restaurant_id))
-          }
-          return response;
-        })
-        .catch(error => {
-          if (count === 0) {
-            self.registration.showNotification("Your review will be posted later");
-          }
-          console.error('Review not posted', error);
-          setTimeout(() => postLocalReviews(1), 10000);
-        })
-    }))
+    .map(async review => {
+      const response = await DBHelper.DATABASE_URL.POST.newReview(review).catch((error) => {
+        if (count === 0) {
+          self.registration.showNotification("Your review will be posted later");
+        }
+        console.error('Review not posted', error);
+        setTimeout(() => postLocalReviews(1), 10000);
+        return null;
+      })
+      console.log('Response after post request', response,'\nStatus :',response.status)
+      if (response && response.status === 201) {
+        await self.registration.showNotification("Review synchronised to server");
+        return await idbKey.delete(store, review.restaurant_id);
+      }
+      return response;
+    })
+  )
 }
 
 /**
@@ -208,6 +207,7 @@ const fetchLastReviews = async () => {
  * Function triggered by sync registration.
  */
 self.addEventListener('sync', function (event) {
+  console.log('sync event triggered');
   if (event.tag === 'post-review') {
     event.waitUntil(postLocalReviews());
   }
