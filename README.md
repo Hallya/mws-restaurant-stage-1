@@ -10,9 +10,8 @@ Run in your terminal:
 4. `npm start`
 You are all set !
 ---
-#### _Three Stage Course Material Project - Restaurant Reviews_
 
-### Main purpose
+## Main purpose
 
 For the **Restaurant Reviews** projects, I had to incrementally convert a basic static webpage to a responsive, accessible, performant, offline-first mobile-ready web application.
 
