@@ -155,7 +155,6 @@ gulp.task('styles', () => {
   gulp.src('dev/assets/sass/**/*.scss')
     .pipe(sass({ outputStyle: 'compressed'}).on('error', sass.logError))
     .pipe(autoprefixer({ browsers: ['last 2 versions'] }))
-    .pipe(gulp.dest('dev/assets/css'))
     .pipe(gulp.dest('dist/assets/css'))
     .pipe(connect.reload());
   gulp.src('dev/assets/css/fonts/*')
@@ -166,7 +165,6 @@ gulp.task('styles-uncompressed', () => {
   gulp.src('dev/assets/sass/**/*.scss')
     .pipe(sass().on('error', sass.logError))
     .pipe(autoprefixer({ browsers: ['last 2 versions'] }))
-    .pipe(gulp.dest('dev/assets/css'))
     .pipe(gulp.dest('dist/assets/css'))
     .pipe(connect.reload());
 });

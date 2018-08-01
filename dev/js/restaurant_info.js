@@ -26,20 +26,6 @@ window.addEventListener('load', async () => {
     registration.sync.register('post-review');
     registration.sync.register('fetch-new-reviews');
     console.log('Registered to SW & "post-review" sync tag & "fetch-new-reviews" tag')
-    const result = await Notification.requestPermission();
-    switch (result) {
-      case 'denied':
-        return console.log('Permission wasn\'t granted. Allow a retry.');
-        break;
-      case 'default':
-        return console.log('The permission request was dismissed.');
-        break;
-      case 'granted':
-        return console.log('Notification allowed');
-        break;
-      default:
-        return;
-    }
   }
 })
 
@@ -88,7 +74,7 @@ const fetchRestaurantFromURL = async () => {
   if (!id) { // no id found in URL
     return console.error('No restaurant id in URL');
   }
-  
+
   const results = await Promise.all([
     DBHelper.fetchRestaurantById(id),
     DBHelper.fetchRestaurantReviews(id)
@@ -280,7 +266,7 @@ const fillReviewsHTML = (reviews = self.reviews) => {
 /**
  * create and display a form on click event.
  */
-const showForm = () => {
+const showForm = async () => {
 
   const form = document.createElement('form');
   const labelNameInput = document.createElement('label');
@@ -373,7 +359,21 @@ const showForm = () => {
   }, 300)
   document.querySelector('#title-container button').removeEventListener('click', showForm);
   document.querySelector('#title-container button').addEventListener('click', hideForm);
-  document.querySelectorAll('#title-container button span').forEach(span => span.classList.toggle('toggled'))
+  document.querySelectorAll('#title-container button span').forEach(span => span.classList.toggle('toggled'));
+  const result = await Notification.requestPermission();
+  switch (result) {
+    case 'denied':
+      return console.log('Permission wasn\'t granted. Allow a retry.');
+      break;
+    case 'default':
+      return console.log('The permission request was dismissed.');
+      break;
+    case 'granted':
+      return console.log('Notification allowed');
+      break;
+    default:
+      return;
+  }
 }
 
 /**
