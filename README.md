@@ -4,8 +4,8 @@
 #### Installation
 
 Run in your terminal:
-1. `git clone https://github.com/hallya/mws-restaurant-stage-1.git`
-2. `cd mws-restaurant-stage-1`
+1. `git clone https://github.com/hallya/mws-restaurant-reviews.git`
+2. `cd mws-restaurant-reviews`
 3. `npm i`
 4. `npm start`
 You are all set !
@@ -14,7 +14,7 @@ You are all set !
 
 ### Main purpose
 
-For the **Restaurant Reviews** projects, I had to incrementally convert a static webpage to a mobile-ready web application. 
+For the **Restaurant Reviews** projects, I had to incrementally convert a basic static webpage to a responsive, accessible, performant, offline-first mobile-ready web application.
 
 ## Project Overview: Stage 1
 
