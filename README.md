@@ -1,6 +1,4 @@
 # Mobile Web Specialist Certification Course
----
-
 #### Installation
 
 Run in your terminal:
@@ -9,7 +7,6 @@ Run in your terminal:
 3. `npm i`
 4. `npm start`
 You are all set !
----
 
 ## Main purpose
 
